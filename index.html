@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#667eea" />
+  <link rel="apple-touch-icon" href="assets/icon-192.png" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Acesso ao sistema RotaTrack" />
+  <meta name="theme-color" content="#667eea" />
+  <title>Login - RotaTrack</title>
+
+  <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="styles/reset.css" />
+  <link rel="stylesheet" href="styles/variables.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/components.css" />
+  <link rel="stylesheet" href="styles/pages.css" />
+  <link rel="stylesheet" href="styles/login.css" />
+</head>
+
+<body class="login-page">
+  <!-- Logo/Título -->
+  <header class="login-header">
+    <h1 class="logo">RotaTrack</h1>
+  </header>
+
+  <!-- Container de Login -->
+  <main class="login-container">
+    <div class="login-box">
+      <h2>Acesso ao sistema</h2>
+
+      <form id="loginForm" novalidate>
+        <div class="input-group">
+          <label for="email" class="sr-only">Email</label>
+          <input id="email" type="email" placeholder="Email" autocomplete="email" required aria-required="true" />
+        </div>
+
+        <div class="input-group">
+          <label for="senha" class="sr-only">Senha</label>
+          <input id="senha" type="password" placeholder="Senha" autocomplete="current-password" required
+            aria-required="true" />
+        </div>
+
+        <button type="submit" id="btnLogin">Entrar</button>
+
+        <p id="loginErro" class="error-message" role="alert" aria-live="polite"></p>
+      </form>
+    </div>
+  </main>
+
+  <!-- Firebase Scripts (ORDEM CORRETA PARA VERSÃO COMPAT) -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+  <!-- Firebase Config DEVE vir DEPOIS dos SDKs -->
+  <script src="scripts/firebase-config.js"></script>
+
+  <!-- App Scripts -->
+  <script src="scripts/login.js"></script>
+
+  <!-- Validação de usuário (ATUALIZADA) -->
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+
+      // 1. Configuração do PWA
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(console.error);
+      }
+
+      // 2. Redirecionamento Automático Seguro
+      // Só redireciona se tiver usuário E email verificado
+      if (typeof firebase !== "undefined") {
+        firebase.auth().onAuthStateChanged((user) => {
+
+          if (user && user.emailVerified) {
+
+            window.location.replace("./inicio.html");
+          }
+          else {
+            // Se não tem usuário OU não verificou o email:
+            // Mostra a tela de login para ele digitar ou ver o erro
+            document.body.style.display = "flex";
+
+            // Se o usuário existe mas não verificou, o login.js vai
+            // cuidar de deslogar ele, não precisamos fazer nada aqui
+            // para não gerar conflito visual.
+          }
+        });
+      }
+    });
+    // O resto da lógica (click no botão, erro de senha) fica somente no login.js
+  </script>
+</body>
+
+</html>

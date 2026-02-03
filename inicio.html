@@ -1,0 +1,489 @@
+<!doctype html>
+<html lang="pt-BR">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="description" content="Sistema de gerenciamento de rotas para entregadores" />
+  <meta name="theme-color" content="#667eea" />
+
+  <link rel="manifest" href="manifest.json">
+  <meta name="theme-color" content="#667eea">
+  <link rel="apple-touch-icon" href="assets/rota_logo-192.png">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>RotaTrack - Gerenciador de Rotas</title>
+  <link rel="shortcut icon" href="assets/favicon.ico" type="image/x-icon">
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet"
+    href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" />
+
+  <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+
+  <link rel="stylesheet" href="styles/reset.css" />
+  <link rel="stylesheet" href="styles/variables.css" />
+  <link rel="stylesheet" href="styles/layout.css" />
+  <link rel="stylesheet" href="styles/components.css" />
+  <link rel="stylesheet" href="styles/pages.css" />
+
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.0/firebase-firestore-compat.js"></script>
+
+  <script src="scripts/firebase-config.js"></script>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      // Verifica se o Firebase já carregou antes de usar
+      if (!window.firebase || !window.firebase.auth) {
+        console.error("Firebase não carregado.");
+        window.location.replace("./index.html");
+        return;
+      }
+
+      firebase.auth().onAuthStateChanged(function (user) {
+        // --- NOVA LÓGICA DE PROTEÇÃO ---
+
+        // Se NÃO tiver usuário OU (tiver usuário MAS o email não for verificado)
+        if (!user || !user.emailVerified) {
+
+          console.warn("Acesso negado: Usuário não logado ou email não verificado.");
+
+          // Se o usuário existe mas não verificou, forçamos o logout aqui também
+          if (user) {
+            firebase.auth().signOut();
+          }
+
+          // Redireciona para o login substituindo o histórico (usuário não pode clicar em Voltar)
+          window.location.replace("./index.html");
+
+        } else {
+          // --- SUCESSO ---
+          document.body.style.display = "block";
+        }
+      });
+    });
+  </script>
+</head>
+
+<body style="display: none" id="app-content">
+  <!--Pagina Inicio-->
+  <div id="page-inicio" class="page active">
+    <div class="logo-site">
+      <h2 class="page-inicio_titulo">RotaTrack</h2>
+      <h2>Inicio</h2>
+    </div>
+
+    <div class="container">
+      <!--Sessao Resumo mensal-->
+      <section class="card-inicio" id="card-inicio_resumo">
+        <h3 class="card-mes-titulo" style="
+              font-size: 0.9rem;
+              color: #718096;
+              font-weight: 600;
+              text-align: center;
+            ">
+          Resumo Mensal
+        </h3>
+
+        <div class="carousel-container" id="carouselResumo">
+          <div class="loading-wrapper">
+            <div class="spinner-loading"></div>
+          </div>
+        </div>
+      </section>
+
+      <!--Sessao cadastras nova rota e preço combustivel-->
+      <section class="card-inicio">
+        <p class="card-inicio_titulo">Gerenciamento Rápido</p>
+
+        <div class="card-inicio_registrar" id="btnRegistrarRota">
+          <span class="material-symbols-outlined"
+            style="font-size: 20px; display: block; margin-bottom: 10px">add_circle</span>
+          Adicionar Nova Rota
+        </div>
+
+        <div class="card-config-gasolina">
+
+          <div class="gas-info-block">
+            <div class="icon-gas icon-red">
+              <span class="material-symbols-outlined">local_gas_station</span>
+            </div>
+            <div class="gas-data">
+              <label>Preço (R$)</label>
+              <input type="number" id="inputPrecoGasolina" step="0.01" placeholder="0.00">
+            </div>
+          </div>
+
+          <div class="vertical-divider"></div>
+
+          <div class="gas-info-block">
+            <div class="icon-gas icon-blue">
+              <span class="material-symbols-outlined">speed</span>
+            </div>
+            <div class="gas-data">
+              <label>Média (Km/L)</label>
+              <input type="number" id="inputConsumoMedio" step="0.1" placeholder="10.0">
+            </div>
+          </div>
+
+        </div>
+      </section>
+
+      <!--Sessao Meta mensal-->
+      <section class="card-meta-mensal">
+        <h3 class="meta-titulo">Meta do Mês Atual</h3>
+
+        <div class="meta-inputs">
+          <div class="input-wrapper">
+            <label>Meta Diária (R$)</label>
+            <input type="number" id="inputMetaDiaria" placeholder="0.00" step="10" />
+          </div>
+          <div class="input-wrapper">
+            <label>Dias de Trabalho</label>
+            <input type="number" id="inputMetaDias" placeholder="Ex: 22" />
+          </div>
+        </div>
+        <div id="chartMeta"></div>
+        <div id="metaTextoResumo">Defina os valores acima.</div>
+      </section>
+
+      <!--Sessao Calendario-->
+      <section class="card-inicio calendar-card">
+        <div class="calendar-header">
+          <button id="btnPrevMonth" class="calendar-nav-btn">
+            <span class="material-symbols-outlined">chevron_left</span>
+          </button>
+          <h3 id="calendarTitle">Carregando...</h3>
+          <button id="btnNextMonth" class="calendar-nav-btn">
+            <span class="material-symbols-outlined">chevron_right</span>
+          </button>
+        </div>
+
+        <div class="calendar-weekdays">
+          <div>Seg</div>
+          <div>Ter</div>
+          <div>Qua</div>
+          <div>Qui</div>
+          <div>Sex</div>
+          <div>Sab</div>
+          <div>Dom</div>
+        </div>
+
+        <div class="calendar-grid" id="calendarGrid"></div>
+      </section>
+    </div>
+  </div>
+
+  <div class="modal" id="modalRegistrarRota">
+    <div class="modal-content">
+      <h3>Nova Rota</h3>
+      <form id="formRegistrarRota">
+
+        <div class="form-group">
+          <label>Quem dirigiu?</label>
+          <select id="selectMotoristaRota">
+            <option value="Motorista 1">Motorista 1</option>
+            <option value="Motorista 2">Motorista 2</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Data da Rota</label>
+          <input type="date" id="inputDataRota"
+            style="width: 100%; padding: 12px; border: 1px solid #edf2f7; border-radius: 8px; font-family: 'Montserrat'; color: #2d3748;">
+        </div>
+
+        <div class="form-group">
+          <label>Plataforma</label>
+          <select id="plataformaRota" required>
+            <option value="Shopee">Shopee</option>
+            <option value="Meli">Mercado Livre (Meli)</option>
+            <option value="outros">Outros</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>KM Percorrido Total</label>
+          <input type="number" id="kmPercorridoInput" step="0.1" placeholder="Ex: 15.5" required />
+        </div>
+
+        <div class="form-group">
+          <label>Valor da Rota (R$)</label>
+          <input type="number" id="valorRota" step="0.01" placeholder="0.00" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="btnCancelarRegistro">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">Salvar Rota</button>
+        </div>
+      </form>
+    </div>
+  </div>
+  <!--Pagina Rotas-->
+  <div id="page-rotas" class="page">
+    <div class="logo-site">
+      <h2 class="page-inicio_titulo">RotaTrack</h2>
+      <h2>Histórico de Rotas</h2>
+    </div>
+
+    <div class="container">
+      <div class="rotas-filter-container">
+        <div class="filter-wrapper">
+
+          <div class="filter-group">
+            <label for="filtroRotasMes">Mês</label>
+            <input type="month" id="filtroRotasMes">
+          </div>
+
+          <div class="filter-group">
+            <label for="filtroRotasApp">Plataforma</label>
+            <select id="filtroRotasApp">
+              <option value="todas">Todas</option>
+            </select>
+          </div>
+
+        </div>
+
+        <button id="btnExportarCSV" class="btn-csv-icon" title="Baixar Relatório">
+          <span class="material-symbols-outlined">download</span>
+        </button>
+      </div>
+
+      <div class="rotas-list" id="rotasList"></div>
+      <div class="empty-state" id="emptyState" style="display: none">
+        <span class="material-symbols-outlined">local_shipping</span>
+        <p>Nenhuma rota registrada ainda</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal" id="modalEncerrarRota">
+    <div class="modal-content">
+      <h3>Finalizar Rota</h3>
+      <form id="formEncerrarRota">
+        <div class="form-group">
+          <label>Plataforma</label>
+          <select id="plataformaRota" required>
+            <option value="Shopee">Shopee</option>
+            <option value="Meli">Mercado Livre (Meli)</option>
+            <option value="Ambas">Ambas</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>KM Percorrido Total</label>
+          <input type="number" id="kmPercorridoInput" step="0.1" placeholder="Ex: 15.5" required />
+        </div>
+
+        <div class="form-group">
+          <label>Consumo do Veículo (Km/L)</label>
+          <input type="number" id="consumoInput" step="0.1" placeholder="Ex: 10" required />
+        </div>
+
+        <div class="form-group">
+          <label>Valor da Rota (R$)</label>
+          <input type="number" id="valorRota" step="0.01" placeholder="0.00" required />
+        </div>
+
+        <div class="form-actions">
+          <button type="button" class="btn btn-secondary" id="btnCancelarRota">
+            Cancelar
+          </button>
+          <button type="submit" class="btn btn-primary">Finalizar</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="footer-menu">
+    <ul class="footer-menu_list">
+      <li class="footer-menu_item">
+        <a href="#" class="menu-item_link active" data-pagina="inicio">
+          <span class="material-symbols-outlined">home</span>
+        </a>
+      </li>
+      <li class="footer-menu_item">
+        <a href="#" class="menu-item_link" data-pagina="rotas">
+          <span class="material-symbols-outlined">local_shipping</span>
+        </a>
+      </li>
+      <li class="footer-menu_item">
+        <a href="#" class="menu-item_link" data-pagina="financeiro">
+          <span class="material-symbols-outlined"> attach_money </span>
+        </a>
+      </li>
+      <li class="footer-menu_item">
+        <a href="#" class="menu-item_link" data-pagina="config">
+          <span class="material-symbols-outlined"> settings </span>
+        </a>
+      </li>
+    </ul>
+  </div>
+
+  <!--pagina configurações-->
+  <div id="page-config" class="page">
+    <div class="logo-site">
+      <h2 class="page-inicio_titulo">RotaTrack</h2>
+      <h2>Configurações</h2>
+    </div>
+
+    <div class="container">
+      <div class="config-profile-card">
+        <div class="config-avatar">
+          <span class="material-symbols-outlined">person</span>
+        </div>
+        <h3 id="profileName" class="config-user-name">Carregando...</h3>
+        <p id="profileEmail" class="config-user-email">...</p>
+      </div>
+
+      <div class="config-section-card">
+        <div class="config-item-row">
+          <div class="config-item-icon">
+            <span class="material-symbols-outlined">dark_mode</span>
+          </div>
+          <div class="config-item-info">
+            <h4>Modo Escuro</h4>
+            <p>Alternar aparência do app</p>
+          </div>
+          <div class="config-item-action">
+            <label class="switch">
+              <input type="checkbox" id="toggleTema">
+              <span class="slider round"></span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="config-section-card">
+        <div class="config-item-info" style="margin-bottom: 10px;">
+          <h4>Motoristas</h4>
+          <p>Defina os nomes para aparecer na seleção</p>
+        </div>
+
+        <div class="form-group">
+          <label>Motorista 1</label>
+          <input type="text" id="configMotorista1" placeholder="Nome (ex: João)">
+        </div>
+
+        <div class="form-group">
+          <label>Motorista 2</label>
+          <input type="text" id="configMotorista2" placeholder="Nome (ex: Maria)">
+        </div>
+
+        <button id="btnSalvarNomes" class="btn btn-secondary" style="width: 100%;">
+          Salvar Nomes
+        </button>
+      </div>
+
+      <div class="config-actions">
+        <button id="btnConfigLogout" class="config-btn-logout">
+          <span class="material-symbols-outlined">logout</span>
+          Sair da Conta
+        </button>
+      </div>
+
+      <div class="config-footer">Versão 1.0.1</div>
+    </div>
+  </div>
+
+  <!--Pagina Financeiro-->
+  <div id="page-financeiro" class="page">
+    <div class="logo-site">
+      <h2 class="page-inicio_titulo">RotaTrack</h2>
+      <h2>Financeiro</h2>
+    </div>
+
+    <div class="container">
+      <div id="financeiro-grid" class="financeiro-filters">
+
+        <div class="filter-group area-motorista">
+          <label>Motorista:</label>
+          <select id="filtroMotoristaFin">
+          </select>
+        </div>
+
+        <div class="dates-rows">
+          <div class="filter-group">
+            <label>De:</label>
+            <input type="date" id="filtroDataInicio" />
+          </div>
+          <div class="filter-group">
+            <label>Até:</label>
+            <input type="date" id="filtroDataFim" />
+          </div>
+        </div>
+
+        <button id="btnFiltrarFinanceiro" class="btn-filter area-botao">
+          Filtrar
+          <span class="material-symbols-outlined">filter_list</span>
+        </button>
+
+      </div>
+
+      <div class="financeiro-dashboard">
+        <div class="fin-card card-lucro">
+          <div class="fin-icon">
+            <span class="material-symbols-outlined">savings</span>
+          </div>
+          <div class="fin-info">
+            <span id="lucro-liquido_txt">Lucro Líquido</span>
+            <h3 id="finLucroLiquido">R$ 0,00</h3>
+          </div>
+        </div>
+
+        <div class="fin-card">
+          <div class="fin-icon icon-blue">
+            <span class="material-symbols-outlined">payments</span>
+          </div>
+          <div class="fin-info">
+            <span>Faturamento</span>
+            <h4 id="finFaturamento">R$ 0,00</h4>
+          </div>
+        </div>
+
+        <div class="fin-card">
+          <div class="fin-icon icon-red">
+            <span class="material-symbols-outlined">local_gas_station</span>
+          </div>
+          <div class="fin-info">
+            <span>Combustível</span>
+            <h4 id="finCustos">R$ 0,00</h4>
+          </div>
+        </div>
+
+        <div class="fin-card">
+          <div class="fin-icon icon-gray">
+            <span class="material-symbols-outlined">speed</span>
+          </div>
+          <div class="fin-info">
+            <span>KM Total</span>
+            <h4 id="finKmTotal">0.0 km</h4>
+          </div>
+        </div>
+
+        <div class="fin-card">
+          <div class="fin-icon icon-blue" style="background: #f3e8ff; color: #8b5cf6">
+            <span class="material-symbols-outlined">currency_exchange</span>
+          </div>
+          <div class="fin-info">
+            <span>Rendimento</span>
+            <h4 id="finRendimento">R$ 0.00/km</h4>
+          </div>
+        </div>
+      </div>
+      <div class="fin-resumo-bar">
+        <span class="material-symbols-outlined">directions_car</span>
+        <span id="finTotalRotasTexto">Rotas realizadas: <strong>0</strong></span>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="scripts/main.js"></script>
+</body>
+
+</html>

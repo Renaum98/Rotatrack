@@ -1,0 +1,347 @@
+/* Componentes Reutilizáveis */
+
+/* Cards Gerais */
+.card-inicio {
+  background: var(--cor-branco);
+  border-radius: var(--radius-grande);
+  padding: var(--espacamento-grande);
+  box-shadow: var(--sombra-card-leve);
+  margin-bottom: var(--espacamento-medio);
+  border: var(--borda-leve);
+}
+
+.card-inicio_titulo {
+  font-size: 1.2rem;
+  color: var(--cor-texto);
+  margin-bottom: var(--espacamento-medio);
+  font-weight: 500;
+  text-align: center;
+}
+
+.card-inicio_registrar {
+  background: var(--gradiente-principal);
+  color: var(--cor-branco);
+  padding: var(--espacamento-medio);
+  border-radius: var(--radius-medio);
+  text-align: center;
+  font-weight: 500;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: transform var(--transicao-rapida),
+    box-shadow var(--transicao-rapida);
+}
+
+.card-inicio_registrar:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--sombra-media);
+}
+
+/* Rota Aberta (Se usar no futuro) */
+.card-inicio_rota-aberta {
+  margin-top: var(--espacamento-medio);
+  display: none;
+}
+
+.card-inicio_rota-aberta.active {
+  display: block;
+}
+
+.rota-aberta-info {
+  background: var(--cor-fundo-claro);
+  border-left: 4px solid var(--cor-primaria);
+  padding: var(--espacamento-medio);
+  border-radius: var(--radius-pequeno);
+  cursor: pointer;
+  transition: background var(--transicao-rapida);
+}
+
+.rota-aberta-info:hover {
+  background: var(--cor-fundo-secundario);
+}
+
+.rota-status {
+  display: flex;
+  align-items: center;
+  gap: var(--espacamento-pequeno);
+  margin-bottom: var(--espacamento-pequeno);
+}
+
+.status-indicator {
+  width: 12px;
+  height: 12px;
+  background: var(--cor-sucesso);
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.rota-detalhes {
+  font-size: 0.9rem;
+  color: var(--cor-texto-secundario);
+  line-height: 1.6;
+}
+
+/* Modal */
+.modal {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  /* Levemente mais escuro para contraste */
+  z-index: 2000;
+  align-items: center;
+  justify-content: center;
+  padding: var(--espacamento-medio);
+  backdrop-filter: blur(4px);
+  /* Efeito moderno de desfoque */
+}
+
+.modal.active {
+  display: flex;
+}
+
+.modal-content {
+  background: var(--cor-branco);
+  border-radius: var(--radius-grande);
+  padding: var(--espacamento-grande);
+  max-width: 500px;
+  width: 100%;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: var(--sombra-grande);
+  border: var(--borda-leve);
+}
+
+.modal-header {
+  margin-bottom: 25px;
+}
+
+.modal-header h2 {
+  color: var(--cor-texto);
+  font-size: 1.5rem;
+}
+
+/* Formulários */
+.form-group {
+  margin-bottom: var(--espacamento-medio);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--cor-texto-secundario);
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 12px;
+  background: var(--cor-input-bg);
+  color: var(--cor-texto);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-pequeno);
+  font-size: 1rem;
+  font-family: "Montserrat", sans-serif;
+  transition: border-color var(--transicao-rapida);
+}
+
+.form-group input:focus,
+.form-group select:focus {
+  outline: none;
+  border-color: var(--cor-primaria);
+  background: var(--cor-branco);
+  /* Destaque ao focar */
+}
+
+/* Actions */
+.form-actions {
+  display: flex;
+  justify-content: space-between;
+  /* Melhor espaçamento */
+  gap: 15px;
+  margin-top: 20px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: var(--espacamento-pequeno);
+  margin-top: 25px;
+}
+
+/* Botões */
+.btn {
+  flex: 1;
+  padding: 14px;
+  border-radius: var(--radius-pequeno);
+  font-size: 1rem;
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: transform var(--transicao-rapida), box-shadow var(--transicao-rapida);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  filter: brightness(1.05);
+}
+
+.btn:active {
+  transform: translateY(0);
+}
+
+.btn-primary {
+  background: var(--gradiente-principal);
+  color: #ffffff;
+  /* Sempre branco pois é gradiente */
+  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+}
+
+.btn-secondary {
+  background: var(--cor-primaria);
+  color: var(--cor-branco);
+  border: 1px solid var(--cor-borda);
+}
+
+.btn-danger {
+  background: var(--cor-perigo);
+  color: #ffffff;
+}
+
+.btn-success {
+  background: var(--cor-sucesso);
+  color: #ffffff;
+}
+
+/* Empty State */
+.empty-state {
+  text-align: center;
+  padding: 60px var(--espacamento-medio);
+  color: var(--cor-texto-terciario);
+}
+
+.empty-state .material-symbols-outlined {
+  font-size: 80px;
+  opacity: 0.5;
+  margin-bottom: var(--espacamento-medio);
+}
+
+.empty-state p {
+  font-size: 1.1rem;
+  opacity: 0.9;
+}
+
+/* --- CONFIG CARD (Perfil) --- */
+.config-section-card {
+  background: var(--cor-branco);
+  border-radius: var(--radius-medio);
+  padding: 15px;
+  margin: 20px 0;
+  box-shadow: var(--sombra-card-leve);
+  border: var(--borda-leve);
+}
+
+.config-item-row {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.config-item-icon {
+  width: 40px;
+  height: 40px;
+  background: var(--cor-input-bg);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--cor-primaria);
+}
+
+.config-item-info {
+  flex: 1;
+}
+
+.config-item-info h4 {
+  font-size: 1rem;
+  color: var(--cor-texto);
+  margin-bottom: 2px;
+  font-weight: 600;
+}
+
+.config-item-info p {
+  font-size: 0.8rem;
+  color: var(--cor-texto-secundario);
+}
+
+/* --- SWITCH (Toggle Dark Mode) --- */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 28px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  /* Cor desligado padrão */
+  transition: .4s;
+  border-radius: 34px;
+}
+
+/* Cor do slider desligado no modo escuro (mais escuro para não brilhar) */
+[data-theme="dark"] .slider {
+  background-color: #4a5568;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+  border-radius: 50%;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+/* Quando ativado (checked) */
+input:checked+.slider {
+  background-color: var(--cor-primaria);
+}
+
+input:checked+.slider:before {
+  transform: translateX(22px);
+}

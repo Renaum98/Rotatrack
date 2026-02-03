@@ -1,0 +1,101 @@
+/* Variáveis CSS */
+:root {
+  /* --- Cores (Modo Claro) --- */
+  --cor-primaria: #667eea;
+  --cor-secundaria: #764ba2;
+  --cor-sucesso: #10b981;
+  --cor-perigo: #ef4444;
+  
+  --cor-texto: #333;
+  --cor-texto-opaco: #555; /* Corrigido: antes estava referenciando a si mesma */
+  --cor-texto-secundario: #666;
+  --cor-texto-terciario: #999;
+  
+  --cor-branco: #ffffff; /* Cor dos Cards */
+  --cor-background: rgb(241, 241, 241); /* Cor do Fundo da Tela */
+  
+  /* Fundos de detalhe */
+  --cor-fundo-claro: #f0f4ff;
+  --cor-fundo-secundario: #e5edff;
+  
+  /* Adicionado para controlar inputs no modo escuro */
+  --cor-input-bg: #f7fafc; 
+  
+  --cor-borda: #e5e7eb;
+
+  /* Gradientes */
+  --gradiente-principal: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* Sombras */
+  --sombra-pequena: 0 2px 10px rgba(0, 0, 0, 0.1);
+  --sombra-media: 0 5px 20px rgba(0, 0, 0, 0.4);
+  --sombra-grande: 0 10px 40px rgba(0, 0, 0, 0.2);
+  --sombra-texto: 2px 2px 4px rgba(0, 0, 0, 0.2);
+  
+  /* Mantive a última definição que você tinha (Neumorphism) */
+  --sombra-card-leve: 3px 3px 3px rgba(0, 0, 0, 0.082), -3px -3px 3px rgba(255, 255, 255, 0.288);
+
+  /* Espaçamentos */
+  --espacamento-pequeno: 10px;
+  --espacamento-medio: 20px;
+  --espacamento-grande: 30px;
+
+  /* Border Radius */
+  --radius-pequeno: 10px;
+  --radius-medio: 15px;
+  --radius-grande: 20px;
+
+  /* Transições */
+  --transicao-rapida: 0.2s;
+  --transicao-media: 0.3s;
+
+  /* Bordas */
+  --borda-leve: 1px solid rgba(3, 0, 0, 0.016);
+}
+
+/* --- MODO ESCURO (DARK MODE) --- */
+/* O JavaScript adiciona data-theme="dark" no HTML quando ativado */
+[data-theme="dark"] {
+  /* Cores de Texto Invertidas */
+  --cor-texto: #f7fafc;            /* Branco suave */
+  --cor-texto-opaco: #e2e8f0;      /* Cinza bem claro */
+  --cor-texto-secundario: #cbd5e0; /* Cinza claro */
+  --cor-texto-terciario: #718096;  /* Cinza médio */
+
+  /* Fundos Escuros */
+  --cor-background: #1a202c;       /* Fundo da tela (Preto Azulado) */
+  --cor-branco: #2d3748;           /* Fundo dos Cards (Cinza Chumbo) */
+  
+  /* Ajuste dos fundos decorativos para não ficarem brancos no escuro */
+  --cor-fundo-claro: #283141;      
+  --cor-fundo-secundario: #323d52;
+
+  /* Inputs e Bordas */
+  --cor-input-bg: #4a5568;         /* Fundo do input escuro */
+  --cor-borda: #4a5568;
+  --borda-leve: 1px solid rgba(255, 255, 255, 0.1);
+
+  /* Ajustes de Contraste */
+  --cor-primaria: #7f9cf5; /* Azul mais claro para ler melhor no fundo escuro */
+
+  /* Sombra: Removemos o brilho branco do neumorphism para o modo escuro */
+  --sombra-card-leve: 0 4px 6px -1px rgba(0, 0, 0, 0.5); 
+}
+
+/* --- MODO ESCURO (DARK MODE) --- */
+[data-theme="dark"] {
+  /* Cores Invertidas */
+  --cor-texto: #f7fafc;           /* Branco suave */
+  --cor-texto-secundario: #cbd5e0; /* Cinza claro */
+  --cor-texto-terciario: #718096;  /* Cinza médio */
+  
+  /* Fundos Escuros */
+  --cor-background: #1a202c;      /* Fundo da tela (quase preto) */
+  --cor-branco: #2d3748;          /* Fundo dos cards (cinza chumbo) */
+  --cor-input-bg: #4a5568;        /* Fundo de inputs */
+  --cor-borda: #4a5568;
+
+  /* Ajustes de Contraste */
+  --sombra-card-leve: 0 4px 6px -1px rgba(0, 0, 0, 0.3); /* Sombra mais forte */
+  --cor-primaria: #7f9cf5; /* Azul mais claro para ler melhor no escuro */
+}

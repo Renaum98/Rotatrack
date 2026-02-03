@@ -1,0 +1,1016 @@
+/* Estilos específicos das páginas */
+
+/* === PAGINA INICIAL === */
+
+#page-inicio {
+  margin-bottom: 30px;
+}
+
+/* =========================================
+   CONFIGURAÇÃO DE GASOLINA E MÉDIA (DUAL)
+   ========================================= */
+
+.card-config-gasolina {
+  background: var(--cor-fundo-claro);
+  border-radius: 12px;
+  padding: 10px;
+  margin-top: 15px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  border: var(--borda-leve);
+}
+
+/* Blocos Individuais (Preço e Média) */
+.gas-info-block {
+  flex: 1;
+  /* Faz os dois ocuparem o mesmo espaço (50/50) */
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Espaço entre ícone e texto */
+  min-width: 0;
+  /* Evita quebra de layout em telas muito pequenas */
+}
+
+/* Ícones (Unificado) */
+.icon-gas {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  /* Garante que o ícone não amasse */
+  font-size: 1.2rem;
+}
+
+/* Variações de Cor dos Ícones */
+.icon-red {
+  background: #fff5f5;
+  /* Vermelho bem claro */
+  color: #f56565;
+}
+
+.icon-blue {
+  background: #ebf8ff;
+  /* Azul bem claro */
+  color: #4299e1;
+}
+
+/* Ajuste para Modo Escuro (se usar data-theme) */
+[data-theme="dark"] .icon-red {
+  background: rgba(245, 101, 101, 0.15);
+}
+
+[data-theme="dark"] .icon-blue {
+  background: rgba(66, 153, 225, 0.15);
+}
+
+/* Área de Texto e Input */
+.gas-data {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.gas-data label {
+  font-size: 0.7rem;
+  color: var(--cor-texto-secundario);
+  font-weight: 600;
+  margin-bottom: 2px;
+  white-space: nowrap;
+  /* Impede que o texto quebre linha */
+}
+
+.gas-data input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  padding: 0;
+
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.95rem;
+  /* Texto maior para facilitar leitura */
+  font-weight: 700;
+  color: var(--cor-texto-opaco);
+
+  outline: none;
+  border-bottom: 2px solid transparent;
+  /* Linha invisível */
+  transition: border-color 0.2s;
+}
+
+.gas-data input:focus {
+  border-bottom-color: var(--cor-primaria);
+  /* Linha aparece ao clicar */
+}
+
+/* =========================================
+   CARROSSEL DE RESUMO (HOME)
+   ========================================= */
+
+.carousel-container {
+  display: flex;
+  overflow-x: auto;
+  gap: 10px;
+  scroll-snap-type: x mandatory;
+  padding: 10px calc(50% - 60px);
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.carousel-container::-webkit-scrollbar {
+  display: none;
+}
+
+/* Card Individual */
+.resumo-mes-card {
+  min-width: 250px;
+  min-height: 150px;
+  border-radius: 12px;
+  padding: var(--espacamento-pequeno);
+  box-shadow: var(--sombra-card-leve);
+  border: var(--borda-leve);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  flex-shrink: 0;
+  scroll-snap-align: center;
+  transition:
+    transform 0.3s ease,
+    border-color 0.3s;
+}
+
+.resumo-mes-card.atual {
+  background: var(--cor-fundo-secundario);
+}
+
+.card-mes-titulo {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--cor-texto-opaco);
+  /* Alterado de #4a5568 */
+  text-transform: capitalize;
+  text-align: center;
+}
+
+.card-mes-dados {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 3px;
+  text-align: center;
+}
+
+.dado-label {
+  font-size: 1.5rem;
+  color: var(--cor-texto-secundario);
+}
+
+.dado-valor {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--cor-texto-opaco);
+}
+
+.dado-valor.money {
+  color: var(--cor-sucesso);
+  /* Alterado de #10b981 */
+}
+
+#card-inicio_resumo {
+  padding: 8px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 100%;
+    top: 0;
+    left: 0;
+    backdrop-filter: blur(5px);
+  }
+
+  &::after {
+    content: "";
+    position: absolute;
+    width: 20px;
+    height: 100%;
+    top: 0;
+    right: 0;
+    backdrop-filter: blur(5px);
+  }
+}
+
+.carousel_loading {
+  text-align: center;
+  margin: auto 0;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  border: 1px solid var(--cor-texto);
+}
+
+.loading-wrapper {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px 0;
+  gap: 10px;
+  color: var(--cor-texto-terciario);
+  /* Alterado de #a0aec0 */
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.spinner-loading {
+  width: 24px;
+  height: 24px;
+  border: 3px solid var(--cor-borda);
+  border-top-color: var(--cor-primaria);
+  border-radius: 50%;
+  animation: girar 1s linear infinite;
+}
+
+@keyframes girar {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* =========================================
+   META MENSAL (APEXCHARTS)
+   ========================================= */
+.card-meta-mensal {
+  background: var(--cor-branco);
+  /* Alterado de white */
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.03);
+  border: 1px solid var(--cor-borda);
+  /* Alterado de #edf2f7 */
+  margin: 20px 0;
+}
+
+.meta-titulo {
+  font-size: 0.9rem;
+  color: var(--cor-texto-secundario);
+  /* Alterado de #718096 */
+  font-weight: 600;
+  margin-bottom: 15px;
+  text-align: center;
+}
+
+.meta-inputs {
+  display: flex;
+  gap: 15px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+
+.meta-inputs .input-wrapper {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.meta-inputs label {
+  font-size: 0.75rem;
+  color: var(--cor-texto-terciario);
+  /* Alterado de #a0aec0 */
+  font-weight: 600;
+}
+
+.meta-inputs input {
+  width: 100%;
+  padding: 10px;
+  background: var(--cor-input-bg);
+  /* Alterado de #f7fafc */
+  border: 1px solid var(--cor-borda);
+  /* Alterado de #edf2f7 */
+  border-radius: 8px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 700;
+  color: var(--cor-texto-opaco);
+  outline: none;
+  text-align: center;
+}
+
+.meta-inputs input:focus {
+  border-color: var(--cor-primaria);
+  background: var(--cor-branco);
+}
+
+/* Ajuste do container do gráfico */
+#chartMeta {
+  min-height: auto;
+  display: flex;
+  margin-top: -15px;
+  justify-content: center;
+  align-items: center;
+}
+
+#metaTextoResumo {
+  text-align: center;
+  font-size: 0.9rem;
+  color: var(--cor-texto-secundario);
+  /* Alterado de #718096 */
+  padding-top: var(--espacamento-medio);
+  line-height: 1.5;
+}
+
+#metaTextoResumo span {
+  font-weight: 700;
+  font-size: 1rem;
+}
+
+/* --- CALENDÁRIO --- */
+.calendar-card {
+  padding: 15px;
+  background: var(--cor-branco);
+  /* Alterado de white */
+  border-radius: 12px;
+  box-shadow: var(--shadow-card, 0 2px 5px rgba(0, 0, 0, 0.05));
+  margin-bottom: 20px;
+}
+
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.calendar-header h3 {
+  font-size: 1rem;
+  color: var(--cor-texto);
+  /* Corrigido de --text-primary */
+  text-transform: capitalize;
+}
+
+.calendar-nav-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--cor-texto-terciario);
+  /* Corrigido de --text-secondary */
+  padding: 5px;
+  border-radius: 50%;
+  transition: background 0.2s;
+}
+
+.calendar-nav-btn:hover {
+  background: var(--cor-borda);
+}
+
+.calendar-weekdays {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  text-align: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--cor-texto-secundario);
+  /* Corrigido de --text-secondary */
+  margin-bottom: 10px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.calendar-day {
+  aspect-ratio: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  color: var(--cor-texto);
+  /* Corrigido de --text-primary */
+  position: relative;
+  border: 1px solid transparent;
+}
+
+/* Dia atual */
+.calendar-day.today {
+  border-color: var(--cor-primaria);
+  font-weight: bold;
+}
+
+/* Bolinha com a contagem de rotas */
+.day-badge {
+  background-color: var(--cor-primaria);
+  color: white;
+  /* Mantém branco pois é texto dentro de cor sólida */
+  font-size: 0.65rem;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 2px;
+}
+
+/* Dias de outros meses */
+.calendar-day.faded {
+  color: var(--cor-texto-terciario);
+  /* Alterado de #cbd5e0 */
+}
+
+/* === PAGINA DE ROTAS === */
+
+.rotas-list {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  padding-bottom: 30px;
+}
+
+/* Filtros */
+.rotas-filter-container {
+  background: var(--cor-branco);
+  /* Alterado de white */
+  padding: 15px;
+  border-radius: 16px;
+  margin-bottom: 20px;
+  box-shadow: var(--sombra-card-leve);
+  display: flex;
+  flex-direction: row;
+  align-items: flex-end;
+  gap: 12px;
+  animation: slideRight 0.6s ease-out;
+}
+
+.filter-wrapper {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.rotas-filter-container label {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--cor-texto-secundario);
+  /* Alterado de #718096 */
+  margin-left: 4px;
+}
+
+.rotas-filter-container input[type="month"],
+.rotas-filter-container select {
+  width: 100%;
+  padding: 0 12px;
+  background: var(--cor-input-bg);
+  /* Alterado de #f7fafc */
+  border: 1px solid var(--cor-borda);
+  /* Alterado de #edf2f7 */
+  border-radius: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.9rem;
+  color: var(--cor-texto);
+  /* Alterado de var(--cor-texto) para garantir */
+  outline: none;
+  height: 45px;
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.rotas-filter-container select {
+  background-image: url("data:image/svg+xml;charset=US-ASCII,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20width%3D%22292.4%22%20height%3D%22292.4%22%3E%3Cpath%20fill%3D%22%23CBD5E0%22%20d%3D%22M287%2069.4a17.6%2017.6%200%200%200-13-5.4H18.4c-5%200-9.3%201.8-12.9%205.4A17.6%2017.6%200%200%200%200%2082.2c0%205%201.8%209.3%205.4%2012.9l128%20127.9c3.6%203.6%207.8%205.4%2012.8%205.4s9.2-1.8%2012.8-5.4L287%2095c3.5-3.5%205.4-7.8%205.4-12.8%200-5-1.9-9.2-5.5-12.8z%22%2F%3E%3C%2Fsvg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px top 50%;
+  background-size: 10px auto;
+}
+
+/* Responsivo para celular muito pequeno */
+@media (max-width: 400px) {
+  .filter-wrapper {
+    grid-template-columns: 1fr;
+  }
+}
+
+.btn-csv-icon {
+  width: 48px;
+  height: 48px;
+  background-color: var(--cor-primaria);
+  color: var(--cor-branco);
+  /* Mantém branco pois o fundo é cor sólida */
+  border: var(--borda-leve);
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex-shrink: 0;
+}
+
+.btn-csv-icon:active {
+  background-color: #d1fae5;
+  transform: scale(0.95);
+}
+
+.rota-card-simples {
+  background: var(--cor-branco);
+  /* Variável já estava ok */
+  border-radius: 12px;
+  padding: 15px;
+  margin-bottom: 15px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  border: 1px solid var(--cor-borda);
+  /* Alterado de #f0f0f0 */
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  animation: slideUp 0.6s ease-out;
+}
+
+/* --- BOTÕES FLUTUANTES NO TOPO DIREITO --- */
+.rota-actions-top {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  display: flex;
+  gap: 3px;
+  z-index: 2;
+}
+
+.btn-mini-action {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  border: none;
+  background: var(--cor-input-bg);
+  /* Alterado de #f7fafc */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-mini-action span {
+  font-size: 16px;
+}
+
+/* Cores dos botões */
+.btn-editar {
+  color: #667eea;
+}
+
+.btn-editar:hover {
+  background: #ebf4ff;
+}
+
+.btn-excluir {
+  color: #e53e3e;
+}
+
+.btn-excluir:hover {
+  background: #fff5f5;
+}
+
+/* --- CABEÇALHO (DATA E VALOR) --- */
+.rota-header-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-right: 70px;
+  border-bottom: 1px solid var(--cor-borda);
+  /* Alterado de #f0f0f0 */
+  padding-bottom: 8px;
+}
+
+.rota-data-destaque {
+  font-weight: 700;
+  color: var(--cor-texto);
+  font-size: 1rem;
+}
+
+.rota-valor-total {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: var(--cor-sucesso);
+  /* Alterado de #10b981 */
+}
+
+/* --- GRID DE INFORMAÇÕES --- */
+.rota-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 8px;
+  text-align: center;
+}
+
+.info-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.info-label {
+  font-size: 0.7rem;
+  color: var(--cor-texto-terciario);
+  /* Alterado de #a0aec0 */
+  text-transform: uppercase;
+  margin-bottom: 3px;
+  font-weight: 600;
+}
+
+.info-value {
+  font-weight: 600;
+  font-size: 0.9rem;
+  color: var(--cor-texto-opaco);
+  /* Alterado de #2d3748 */
+}
+
+.info-value.lucro {
+  color: var(--cor-sucesso);
+  /* Alterado de #10b981 */
+}
+
+.motorista-badge {
+  position: absolute;
+  left: 10px;
+  top: -15px;
+  width: fit-content;
+  background: var(--cor-primaria);
+  color: var(--cor-branco);
+  padding: 5px 10px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  border-radius: 10px;
+  /* Espaço para os botões de editar/excluir */
+  box-shadow: var(--sombra-card-leve);
+}
+
+@media (max-width: 360px) {
+  .rota-header-row {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 5px;
+  }
+
+  .rota-info-grid {
+    font-size: 0.8rem;
+  }
+}
+
+/* PAGINA CONFIGURAÇÕES */
+.config-profile-card {
+  background: var(--cor-branco);
+  /* Alterado de #ffffff */
+  border: var(--borda-leve);
+  border-radius: 16px;
+  padding: 30px 20px;
+  text-align: center;
+  box-shadow: var(--sombra-card-leve);
+  margin-bottom: 25px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+/* Círculo do Avatar */
+.config-avatar {
+  width: 80px;
+  height: 80px;
+  background-color: var(--cor-fundo-secundario);
+  /* Alterado de #e0e7ff */
+  color: var(--cor-primaria);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 15px;
+  transition: transform 0.3s ease;
+}
+
+.config-avatar:hover {
+  transform: scale(1.05);
+}
+
+.config-avatar span {
+  font-size: 40px;
+}
+
+/* Tipografia do Perfil */
+.config-user-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--cor-texto-opaco);
+  margin-bottom: 4px;
+}
+
+.config-user-email {
+  font-size: 0.9rem;
+  color: var(--cor-texto-secundario);
+  /* Alterado de #718096 */
+  margin: 0;
+  word-break: break-all;
+}
+
+/* Área de Botões */
+.config-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+/* Botão de Logout */
+.config-btn-logout {
+  width: 100%;
+  background-image: var(--gradiente-principal);
+  color: var(--cor-branco);
+  border: none;
+  padding: 16px;
+  border-radius: 12px;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 600;
+  font-size: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 5px rgba(239, 68, 68, 0.1);
+}
+
+.config-btn-logout:active {
+  background-color: #fecaca;
+  transform: scale(0.98);
+}
+
+.config-btn-logout span {
+  font-size: 20px;
+}
+
+.config-footer {
+  text-align: center;
+  margin-top: 40px;
+  color: var(--cor-texto-terciario);
+  font-size: 0.75rem;
+  font-weight: 500;
+  letter-spacing: 1px;
+}
+
+/* =========================================
+   ESTILOS FINANCEIRO
+
+/* --- Container dos Filtros --- */
+/* Container Principal - Agora em Coluna */
+.financeiro-filters {
+  background: var(--cor-branco);
+  padding: 15px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+  box-shadow: var(--sombra-card-leve);
+  border: var(--borda-leve);
+  /* Garante que os filhos estiquem 100% da largura */
+  align-items: stretch;
+  animation: slideRight 0.6s ease-out;
+}
+
+/* Grupo de Filtro Genérico */
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* NOVA CLASSE: Linha das Datas (Lado a Lado) */
+.dates-rows {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+}
+
+.dates-rows .filter-group {
+  flex: 1;
+}
+
+
+.filter-group label {
+  font-size: 0.75rem;
+  color: var(--cor-texto-secundario);
+  font-weight: 600;
+}
+
+
+/* Aplica estilo tanto para INPUT quanto para SELECT */
+.filter-group input,
+.filter-group select {
+  width: 100%;
+  padding: 10px 12px;
+  background: var(--cor-input-bg);
+  border: 1px solid var(--cor-borda);
+  border-radius: 10px;
+  font-family: "Montserrat", sans-serif;
+  font-size: 0.9rem;
+  color: var(--cor-texto-opaco);
+  outline: none;
+  transition: border-color 0.2s;
+  /* Remove estilo padrão feio do select no iPhone/Android */
+  -webkit-appearance: none;
+  appearance: none;
+}
+
+.filter-group input:focus,
+.filter-group select:focus {
+  border-color: var(--cor-primaria);
+  background: var(--cor-branco);
+}
+
+/* Botão de Filtro - Ajustado para o rodapé */
+.btn-filter {
+  /* Removemos o flex: 1 antigo e definimos altura fixa */
+  width: 100%;
+  height: 48px;
+  /* Um pouco mais alto para clique fácil */
+  background: var(--cor-primaria);
+  color: var(--cor-branco);
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-weight: 600;
+  box-shadow: 0 4px 6px rgba(102, 126, 234, 0.25);
+  transition: transform 0.1s;
+  margin-top: 5px;
+  /* Espacinho extra do topo */
+}
+
+.btn-filter:active {
+  transform: scale(0.98);
+}
+
+/* --- Dashboard Grid (Cards) --- */
+.financeiro-dashboard {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+  animation: slideUp 0.6s ease-out;
+}
+
+/* Card Genérico */
+.fin-card {
+  background: var(--cor-branco);
+  /* Alterado de white */
+  padding: 16px;
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 12px;
+  position: relative;
+  overflow: hidden;
+  border: var(--borda-leve);
+  box-shadow: var(--sombra-card-leve);
+}
+
+/* Card de Lucro (Destaque Total) */
+.card-lucro {
+  grid-column: span 2;
+  background: linear-gradient(135deg, #10b981 0%, #047857 100%);
+  color: white;
+  flex-direction: row;
+  align-items: center;
+  padding: 20px;
+}
+
+.card-lucro .fin-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  width: 50px;
+  height: 50px;
+  font-size: 24px;
+}
+
+.card-lucro .fin-info {
+  flex: 1;
+}
+
+.card-lucro span {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 0.85rem;
+}
+
+.card-lucro h3 {
+  color: white;
+  font-size: 2rem;
+  margin: 0;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+  transition: color 0.3s ease;
+}
+
+/* Outros Cards */
+.fin-icon {
+  width: 38px;
+  height: 38px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+#lucro-liquido_txt {
+  color: var(--cor-branco);
+  /* Alterado de --cor-branca */
+}
+
+/* Cores dos Ícones (Mantidos cores fixas para contraste) */
+.icon-blue {
+  background: var(--cor-fundo-claro);
+  /* Alterado para adaptar fundo */
+  color: #4299e1;
+}
+
+.icon-red {
+  background: #fff5f5;
+  /* Mantido fixo pois é vermelho */
+  color: #f56565;
+}
+
+.icon-gray {
+  background: var(--cor-input-bg);
+  /* Alterado de #edf2f7 */
+  color: #718096;
+}
+
+/* Tipografia dos Cards Menores */
+.fin-info span {
+  font-size: 0.7rem;
+  color: var(--cor-texto-secundario);
+  /* Alterado de #718096 */
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+
+.fin-info h4 {
+  font-size: 1.1rem;
+  color: var(--cor-texto-opaco);
+  font-weight: 700;
+  margin: 0;
+  margin-top: 4px;
+}
+
+.fin-resumo-bar {
+  background-color: var(--cor-branco);
+  /* Variável já ok */
+  border-radius: 12px;
+  padding: 12px;
+  margin: 10px 0 30px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  color: var(--cor-texto-secundario);
+  /* Alterado de #718096 */
+  font-size: 0.9rem;
+  box-shadow: var(--sombra-card-leve);
+  border: var(--borda-leve);
+}
+
+.fin-resumo-bar strong {
+  color: var(--cor-texto-opaco);
+  font-size: 1rem;
+}
+
+.fin-resumo-bar .material-symbols-outlined {
+  font-size: 20px;
+  color: var(--cor-primaria);
+  /* Alterado de #667eea */
+}
+
+@media (min-width: 480px) {
+  .btn-filter {
+    flex: 0 0 50px;
+    height: 42px;
+  }
+}
