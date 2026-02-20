@@ -501,7 +501,7 @@ export function initPadronizador() {
       // 3. Formata o texto para a coluna Notes
       let notasParaMotorista = "";
       if (qtdPacotes > 0) {
-        notasParaMotorista = `PACOTES: ${sequenciasValidas.join(", ")} (TOTAL: ${qtdPacotes})`;
+        notasParaMotorista = `Pacotes: ${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
       }
 
       // 4. Formata o CEP com o tracinho (ex: 01001-000) pro Maps ler melhor
