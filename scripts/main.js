@@ -47,18 +47,35 @@ function inicializarModoOffline() {
 // ============================================
 // TEMA (Dark/Light)
 // ============================================
+
+// 1. Função auxiliar para mudar a cor da barra do celular
+function atualizarCorDaBarra(tema) {
+  const metaThemeColor = document.getElementById("meta-theme-color");
+  // Opcional: use document.querySelector('meta[name="theme-color"]') se preferir não usar ID
+  
+  if (metaThemeColor) {
+    // Se for dark, pinta a barra de escuro. Se for light, pinta de claro.
+    const cor = tema === "dark" ? "#1a202c" : "#f1f1f1";
+    metaThemeColor.setAttribute("content", cor);
+  }
+}
+
 function inicializarTema() {
   const toggle = document.getElementById("toggleTema");
   const temaSalvo = localStorage.getItem("theme");
 
+  // 2. Aplica o tema salvo ao abrir o app e já pinta a barra
   if (temaSalvo === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
+    atualizarCorDaBarra("dark"); // <-- Atualiza a barra
     if (toggle) toggle.checked = true;
   } else {
     document.documentElement.setAttribute("data-theme", "light");
+    atualizarCorDaBarra("light"); // <-- Atualiza a barra
     if (toggle) toggle.checked = false;
   }
 
+  // 3. Evento do botão (Toggle)
   if (toggle) {
     const newToggle = toggle.cloneNode(true);
     toggle.parentNode.replaceChild(newToggle, toggle);
@@ -67,9 +84,11 @@ function inicializarTema() {
       if (e.target.checked) {
         document.documentElement.setAttribute("data-theme", "dark");
         localStorage.setItem("theme", "dark");
+        atualizarCorDaBarra("dark"); // <-- Atualiza a barra na mesma hora!
       } else {
         document.documentElement.setAttribute("data-theme", "light");
         localStorage.setItem("theme", "light");
+        atualizarCorDaBarra("light"); // <-- Atualiza a barra na mesma hora!
       }
     });
   }
