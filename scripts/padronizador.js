@@ -457,11 +457,10 @@ export function initPadronizador() {
     // Montar planilha final com as colunas do modelo
     processedRows = [
       [
-        "Address Line 1", // O Circuit reconhece automaticamente (Rua + Número)
-        "Address Line 2", // O Circuit reconhece como Linha 2 do endereço
-        "Bairro", // Ajuda o GPS do Circuit a não errar a cidade
-        "City", // O Circuit reconhece automaticamente
-        "Notes", // O Circuit exibe isso em destaque para o motorista!
+        "Address Line 1", // Mapeia 100% automático (Rua e Número)
+        "Address Line 2", // Mapeia automático (Complemento e Bairro)
+        "City", // Mapeia automático (Cidade)
+        "Notes", // Mapeia automático para a tela do motorista
       ],
     ];
 
@@ -472,19 +471,27 @@ export function initPadronizador() {
       // 2. Conta a quantidade de pacotes
       const qtdPacotes = sequenciasValidas.length;
 
-      // 3. Formata o texto para ficar perfeito na tela do Circuit
+      // 3. Formata o texto para a coluna Notes (O texto em si pode ficar em português)
       let notasParaMotorista = "";
       if (qtdPacotes > 0) {
         notasParaMotorista = `Pacotes: ${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
       }
 
-      // 4. Adiciona a linha na planilha
+      // 4. Junta o Bairro com o Complemento (já que o Circuit EN não tem campo 'Bairro' nativo)
+      let complementoEBairro = item.line2;
+      if (item.bairro) {
+        // Se tiver complemento, junta com o bairro. Se não, fica só o bairro.
+        complementoEBairro = complementoEBairro
+          ? `${complementoEBairro} - ${item.bairro}`
+          : item.bairro;
+      }
+
+      // 5. Adiciona a linha na planilha
       processedRows.push([
-        item.line1, // Rua e Número (Ex: Rua Domingos, 50)
-        item.line2, // Complemento (Ex: Apto 12)
-        item.bairro, // Bairro
-        item.city, // Cidade
-        notasParaMotorista, // Notas (Ex: PACOTES: 66, 67 (TOTAL: 2))
+        item.line1, // Address Line 1 (Ex: Rua Domingos, 50)
+        complementoEBairro, // Address Line 2 (Ex: Apto 12 - Centro)
+        item.city, // City (Ex: Santo André)
+        notasParaMotorista, // Notes (Ex: PACOTES: 66, 67 (TOTAL: 2))
       ]);
     }
 
