@@ -457,10 +457,9 @@ export function initPadronizador() {
     // Montar planilha final com as colunas do modelo
     processedRows = [
       [
-        "Address Line 1", // Mapeia 100% automático (Rua e Número)
-        "Address Line 2", // Mapeia automático (Complemento e Bairro)
-        "City", // Mapeia automático (Cidade)
-        "Notes", // Mapeia automático para a tela do motorista
+        "Address", // Força o GPS a ler tudo junto (Rua, Número, Bairro, Cidade)
+        "Address Line 2", // Apenas o complemento (para não confundir o GPS)
+        "Notes", // Pacotes para o motorista
       ],
     ];
 
@@ -471,27 +470,24 @@ export function initPadronizador() {
       // 2. Conta a quantidade de pacotes
       const qtdPacotes = sequenciasValidas.length;
 
-      // 3. Formata o texto para a coluna Notes (O texto em si pode ficar em português)
+      // 3. Formata as Notas
       let notasParaMotorista = "";
       if (qtdPacotes > 0) {
-        notasParaMotorista = `Pacotes: ${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
+        notasParaMotorista = `PACOTES: ${sequenciasValidas.join(", ")} (TOTAL: ${qtdPacotes})`;
       }
 
-      // 4. Junta o Bairro com o Complemento (já que o Circuit EN não tem campo 'Bairro' nativo)
-      let complementoEBairro = item.line2;
-      if (item.bairro) {
-        // Se tiver complemento, junta com o bairro. Se não, fica só o bairro.
-        complementoEBairro = complementoEBairro
-          ? `${complementoEBairro} - ${item.bairro}`
-          : item.bairro;
-      }
+      // 4. A MÁGICA: Monta o "Endereço Blindado" para o GPS
+      // Junta line1 (Rua, Num), Bairro e Cidade separados por vírgula.
+      // O filter(Boolean) garante que não fiquem vírgulas sobrando se faltar o bairro.
+      const enderecoGPS = [item.line1, item.bairro, item.city]
+        .filter(Boolean)
+        .join(", ");
 
       // 5. Adiciona a linha na planilha
       processedRows.push([
-        item.line1, // Address Line 1 (Ex: Rua Domingos, 50)
-        complementoEBairro, // Address Line 2 (Ex: Apto 12 - Centro)
-        item.city, // City (Ex: Santo André)
-        notasParaMotorista, // Notes (Ex: PACOTES: 66, 67 (TOTAL: 2))
+        enderecoGPS, // Ex: "Rua Ministro Firmino Whitaker, 50, Brás, São Paulo"
+        item.line2, // Ex: "Casa 1" (Fica separado pra não bugar o mapa)
+        notasParaMotorista, // Ex: "PACOTES: 66, 67 (TOTAL: 2)"
       ]);
     }
 
