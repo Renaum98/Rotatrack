@@ -5,6 +5,11 @@
   box-sizing: border-box;
 }
 
+input, textarea {
+  -webkit-user-select: auto;
+  user-select: auto;
+}
+
 /* --- CORREÇÃO PARA IPHONE (iOS) --- */
 input[type="date"],
 input[type="text"],
@@ -22,6 +27,19 @@ select {
 
 body {
   font-family: "Montserrat", sans-serif;
+  touch-action: manipulation;
+
+  /* 2. Remove o efeito "elástico" (pull-to-refresh) ao arrastar a tela pro topo/fundo */
+  overscroll-behavior-y: none;
+
+  /* 3. Impede que o usuário selecione os textos sem querer ao segurar o dedo na tela */
+  -webkit-user-select: none;
+  /* Safari */
+  user-select: none;
+  /* Padrão */
+
+  /* 4. Remove aquele quadrado azul/cinza feio que pisca quando você clica num botão/link no celular */
+  -webkit-tap-highlight-color: transparent;
 }
 
 ul {
@@ -36,6 +54,10 @@ button {
   font-family: "Montserrat", sans-serif;
   cursor: pointer;
   border: none;
+}
+
+a, button, img, div {
+  -webkit-touch-callout: none;
 }
 
 /*Animações*/
