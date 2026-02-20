@@ -485,7 +485,7 @@ export function initPadronizador() {
       [
         "Address Line 1", // Endereço completo para o GPS não errar
         "Address Line 2", // Complemento isolado
-        "Notes", // Pacotes do motorista
+        "Pacotes", // Pacotes do motorista
         "Latitude", // Eixo Y (Se existir na planilha)
         "Longitude", // Eixo X (Se existir na planilha)
       ],
