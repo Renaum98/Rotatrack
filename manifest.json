@@ -3,7 +3,7 @@
   "short_name": "RotaTrack",
   "start_url": "./inicio.html",
   "scope": "./",
-  "display": "fullscreen",
+  "display": "standalone",
   "background_color": "#667eea",
   "theme_color": "#667eea",
   "orientation": "portrait",
