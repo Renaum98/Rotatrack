@@ -114,7 +114,7 @@ function padronBuildAndSplit(original, logradouro) {
     .split(/\s+/)
     .filter((p) => p.length > 3 && !PALAVRAS_IGNORADAS.has(p));
 
-  // Passo 1: encontrar onde o logradouro termina no texto original normalizado
+  // Acha onde o nome da rua termina no texto bagunçado
   let fimLogradouro = 0;
   for (const palavra of palavrasChave) {
     const idx = origNorm.indexOf(palavra);
@@ -124,43 +124,37 @@ function padronBuildAndSplit(original, logradouro) {
   }
 
   const restoOriginal = original.slice(fimLogradouro).trim();
-  const posVirgula = restoOriginal.indexOf(",");
 
-  if (posVirgula >= 0) {
-    const antesVirgula = restoOriginal.slice(0, posVirgula).trim();
-    const aposVirgula = restoOriginal.slice(posVirgula + 1).trim();
+  // MÁGICA: Procura APENAS pela primeira sequência de números.
+  // Se for "204A, São Paulo", ele extrai apenas o "204".
+  const numMatch = restoOriginal.match(/(\d+)/);
+  const numero = numMatch ? numMatch[1] : "";
 
-    const numMatch = aposVirgula.match(/^(\S+)(.*)/);
-    const numero = numMatch ? numMatch[1] : aposVirgula;
-    const resto = numMatch ? numMatch[2].replace(/^,\s*/, "").trim() : "";
+  // Monta a linha 1 limpa. Se não achar número, fica só a rua.
+  const line1 = numero ? `${logradouro}, ${numero}` : logradouro;
 
-    const line1 = `${logradouro}, ${numero}`;
-
-    const partesLine2 = [];
-    if (antesVirgula) partesLine2.push(antesVirgula);
-    if (resto) partesLine2.push(resto);
-    const line2 = partesLine2.join(", ");
-
-    return { line1, line2 };
-  }
-
-  return { line1: logradouro, line2: restoOriginal.trim() };
+  // Retorna a linha 1 perfeita e DESTRÓI a linha 2 (para não vazar lixo pra planilha)
+  return { line1, line2: "" };
 }
 
 // ── Versão sem âncora: separa só com base na estrutura do texto ──
 function splitAddressLines(fullAddress) {
   const s = String(fullAddress || "").trim();
 
-  const numMatch = s.match(/,\s*(\d+\S*)(.*)/);
+  // Encontra a primeira sequência de números puros
+  const numMatch = s.match(/(\d+)/);
+
+  // Se não tem número nenhum, devolve o texto limpo
   if (!numMatch) return { line1: s, line2: "" };
 
-  const posVirgula = s.indexOf(numMatch[0]);
-  const line1 = s
-    .slice(0, posVirgula + numMatch[0].length - numMatch[2].length)
-    .trim();
-  const line2 = numMatch[2].replace(/^,\s*/, "").trim();
+  const numero = numMatch[1];
+  const posNumero = s.indexOf(numMatch[0]);
 
-  return { line1, line2 };
+  // A rua é tudo o que vem antes do número (removendo vírgulas coladas)
+  const rua = s.slice(0, posNumero).replace(/[,\s]+$/, "").trim();
+
+  // Junta a Rua + Número puro, e zera o resto
+  return { line1: `${rua}, ${numero}`, line2: "" };
 }
 
 // ── ViaCEP com cache ──
@@ -456,20 +450,40 @@ export function initPadronizador() {
         // Se a própria planilha não salvou ele, aplica o Fallback Textual antigo
         if (!resgatado) {
           const abbr = padronApplyAbbr(item.original);
-          const separacaoFallback = splitAddressLines(abbr);
-          item.line1 = separacaoFallback.line1;
-          item.line2 = separacaoFallback.line2;
 
-          if (item.status === "suspeito") {
+          // Se o ViaCEP achou a rua oficial, nós ignoramos o texto bagunçado (ex: "São Paulo, 200")
+          if (item.viaCep) {
+            // Procura o primeiro número que aparecer no texto do cliente
+            const numMatch = abbr.match(/(\d+)(.*)/);
+
+            if (numMatch) {
+              item.line1 = `${item.viaCep}, ${numMatch[1]}`; // Junta a Rua Oficial + Número do cliente
+
+              // O que sobrar depois do número (ex: " , Apto 2") ele limpa as vírgulas e joga pro complemento
+              item.line2 = numMatch[2].replace(/^[,\s\-]+/, "").trim();
+            } else {
+              item.line1 = item.viaCep; // Se não tiver número nenhum, usa só a rua oficial
+              item.line2 = abbr; // Joga o texto bizarro pro complemento pra não perder a info
+            }
+
+            // MÁGICA: Como consertamos usando o CEP, ele não vai mais pra caixa vermelha!
+            item.status = "ok";
+            totalResgatados++;
+            totalCorrigidos++;
+
+          } else {
+            // PLANO D: Se o CEP também era inválido (não tem viaCep), aí sim ele vira suspeito
+            const separacaoFallback = splitAddressLines(abbr);
+            item.line1 = separacaoFallback.line1;
+            item.line2 = separacaoFallback.line2;
+
             totalSuspeitos++;
             listaSuspeitos.push({
               linha: item.linhaOriginal,
               cep: item.cep,
               original: item.original,
-              viaCep: item.viaCep,
+              viaCep: "CEP Inválido/Não encontrado",
             });
-          } else {
-            totalApenasAbrev++;
           }
         }
       }
@@ -484,7 +498,6 @@ export function initPadronizador() {
     processedRows = [
       [
         "Address Line 1", // Endereço completo para o GPS não errar
-        "Address Line 2", // Complemento isolado
         "Pacotes", // Pacotes do motorista
         "Latitude", // Eixo Y (Se existir na planilha)
         "Longitude", // Eixo X (Se existir na planilha)
@@ -531,7 +544,6 @@ export function initPadronizador() {
       // 6. Adiciona a linha na planilha final
       processedRows.push([
         enderecoCompletoGoogleMaps, // Address Line 1 (Endereço Completo)
-        item.line2, // Address Line 2 (Complemento)
         notasParaMotorista, // Notes (Pacotes)
         item.lat, // Latitude (Se capturada)
         item.lng, // Longitude (Se capturada)
