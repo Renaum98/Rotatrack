@@ -333,6 +333,13 @@ export function initPadronizador() {
     );
     const cityCol = headers.findIndex((h) => /^city$|^cidade$/i.test(h));
 
+    // === NOVAS COLUNAS: ESTADO E COORDENADAS ===
+    const estadoCol = headers.findIndex((h) =>
+      /^estado$|^uf$|^state$/i.test(h),
+    );
+    const latCol = headers.findIndex((h) => /latitude|lat/i.test(h));
+    const lngCol = headers.findIndex((h) => /longitude|lng|lon/i.test(h));
+
     if (addrCol < 0 || cepCol < 0) {
       label.textContent = "Coluna de endereço ou CEP não encontrada.";
       progress.style.display = "block";
@@ -388,6 +395,20 @@ export function initPadronizador() {
         status = "sem_cep"; // Deixa pendente
       }
 
+      // Pega a cidade (prioriza a planilha, se não tiver, usa o ViaCEP)
+      let cidadeCorreta = cityCol >= 0 ? String(row[cityCol] || "").trim() : "";
+      if (!cidadeCorreta && via && via.localidade) {
+        cidadeCorreta = via.localidade;
+      }
+
+      // Pega o estado (prioriza o ViaCEP, se não tiver, usa a planilha)
+      let estadoCorreto = "";
+      if (via && via.uf) {
+        estadoCorreto = via.uf;
+      } else if (estadoCol >= 0) {
+        estadoCorreto = String(row[estadoCol] || "").trim();
+      }
+
       linhasProcessadas.push({
         original: origAddr,
         cep: cepClean,
@@ -397,7 +418,10 @@ export function initPadronizador() {
         status,
         linhaOriginal: i + 2,
         bairro: bairroCol >= 0 ? String(row[bairroCol] || "").trim() : "",
-        city: cityCol >= 0 ? String(row[cityCol] || "").trim() : "",
+        city: cidadeCorreta, // Cidade inteligente
+        estado: estadoCorreto, // Estado inteligente
+        lat: latCol >= 0 ? String(row[latCol] || "").trim() : "",
+        lng: lngCol >= 0 ? String(row[lngCol] || "").trim() : "",
         sequencias: seqCol >= 0 ? [String(row[seqCol] || "").trim()] : [],
       });
 
@@ -454,13 +478,16 @@ export function initPadronizador() {
     // Segunda passagem: agrupar endereços duplicados
     const agrupadas = agruparEnderecos(linhasProcessadas);
 
-    // Montar planilha final com as colunas do modelo
+    // ========================================================
+    // Montar planilha final (PADRÃO GOOGLE MAPS + CIRCUIT)
+    // ========================================================
     processedRows = [
       [
-        "Address Line 1", // Mapeia 100% automático (Rua e Número)
-        "Address Line 2", // Mapeia automático (Complemento e Bairro)
-        "City", // Mapeia automático (Cidade)
-        "Notes", // Mapeia automático para a tela do motorista
+        "Address Line 1", // Endereço completo para o GPS não errar
+        "Address Line 2", // Complemento isolado
+        "Notes", // Pacotes do motorista
+        "Latitude", // Eixo Y (Se existir na planilha)
+        "Longitude", // Eixo X (Se existir na planilha)
       ],
     ];
 
@@ -471,27 +498,43 @@ export function initPadronizador() {
       // 2. Conta a quantidade de pacotes
       const qtdPacotes = sequenciasValidas.length;
 
-      // 3. Formata o texto para a coluna Notes (O texto em si pode ficar em português)
+      // 3. Formata o texto para a coluna Notes
       let notasParaMotorista = "";
       if (qtdPacotes > 0) {
-        notasParaMotorista = `Pacotes: ${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
+        notasParaMotorista = `PACOTES: ${sequenciasValidas.join(", ")} (TOTAL: ${qtdPacotes})`;
       }
 
-      // 4. Junta o Bairro com o Complemento (já que o Circuit EN não tem campo 'Bairro' nativo)
-      let complementoEBairro = item.line2;
-      if (item.bairro) {
-        // Se tiver complemento, junta com o bairro. Se não, fica só o bairro.
-        complementoEBairro = complementoEBairro
-          ? `${complementoEBairro} - ${item.bairro}`
-          : item.bairro;
+      // 4. Formata o CEP com o tracinho (ex: 01001-000) pro Maps ler melhor
+      let cepFormatado = item.cep;
+      if (cepFormatado && cepFormatado.length === 8) {
+        cepFormatado = `${cepFormatado.slice(0, 5)}-${cepFormatado.slice(5)}`;
       }
 
-      // 5. Adiciona a linha na planilha
+      // 5. Constrói o endereço blindado: Rua, Número, Cidade, Estado, CEP, País
+      const partesEndereco = [
+        item.line1,
+        item.city,
+        item.estado,
+        cepFormatado,
+        "Brasil", // O país cravado ajuda o Google a nunca mandar pra fora do país
+      ];
+
+      // O filter(Boolean) remove espaços vazios caso falte estado ou cidade
+      const enderecoCompletoGoogleMaps = partesEndereco
+        .filter(Boolean)
+        .join(", ")
+        .split(",")
+        .map((parte) => parte.trim())
+        .filter(Boolean)
+        .join(", ");
+
+      // 6. Adiciona a linha na planilha final
       processedRows.push([
-        item.line1, // Address Line 1 (Ex: Rua Domingos, 50)
-        complementoEBairro, // Address Line 2 (Ex: Apto 12 - Centro)
-        item.city, // City (Ex: Santo André)
-        notasParaMotorista, // Notes (Ex: PACOTES: 66, 67 (TOTAL: 2))
+        enderecoCompletoGoogleMaps, // Address Line 1 (Endereço Completo)
+        item.line2, // Address Line 2 (Complemento)
+        notasParaMotorista, // Notes (Pacotes)
+        item.lat, // Latitude (Se capturada)
+        item.lng, // Longitude (Se capturada)
       ]);
     }
 
@@ -500,11 +543,11 @@ export function initPadronizador() {
     const totalOriginal = linhasProcessadas.length;
     const totalAgrupados = totalOriginal - totalParadas;
 
-    let resumo = `✓ ${totalParadas} paradas (${totalAgrupados} agrupadas) · ${totalCorrigidos} corrigidos`;
+    let resumo = `✓ <strong style="color: var(--cor-sucesso, #3182ce); font-size: 1.1em;">${totalParadas} paradas</strong> (${totalAgrupados} agrupadas) &middot; ${totalCorrigidos} corrigidos`;
     if (totalResgatados > 0) resumo += ` (${totalResgatados} resgatados)`;
     if (totalSuspeitos > 0) resumo += ` · ${totalSuspeitos} suspeitos`;
 
-    label.textContent = resumo;
+    label.innerHTML = resumo;
     bar.style.width = "100%";
     btnRow.style.display = "flex";
 
