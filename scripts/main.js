@@ -48,50 +48,62 @@ function inicializarModoOffline() {
 // TEMA (Dark/Light)
 // ============================================
 
-// 1. Função auxiliar para mudar a cor da barra do celular
+// 1. Função auxiliar para mudar a cor da barra
 function atualizarCorDaBarra(tema) {
-  const metaThemeColor = document.getElementById("meta-theme-color");
-  // Opcional: use document.querySelector('meta[name="theme-color"]') se preferir não usar ID
-  
+  // Busca a tag diretamente pelo 'name', é mais garantido que usar ID em meta tags
+  const metaThemeColor = document.querySelector('meta[name="theme-color"]');
+
   if (metaThemeColor) {
-    // Se for dark, pinta a barra de escuro. Se for light, pinta de claro.
     const cor = tema === "dark" ? "#1a202c" : "#f1f1f1";
     metaThemeColor.setAttribute("content", cor);
+  } else {
+    console.warn("Tag meta theme-color não encontrada no HTML.");
   }
 }
 
 function inicializarTema() {
   const toggle = document.getElementById("toggleTema");
-  const temaSalvo = localStorage.getItem("theme");
+  let temaSalvo = localStorage.getItem("theme");
 
-  // 2. Aplica o tema salvo ao abrir o app e já pinta a barra
+  // SE NÃO TIVER TEMA SALVO: Lê a preferência do sistema do celular do usuário
+  if (!temaSalvo) {
+    const sistemaPedeEscuro =
+      window.matchMedia &&
+      window.matchMedia("(prefers-color-scheme: dark)").matches;
+    temaSalvo = sistemaPedeEscuro ? "dark" : "light";
+  }
+
+  // Aplica o tema e atualiza a barra na inicialização
   if (temaSalvo === "dark") {
     document.documentElement.setAttribute("data-theme", "dark");
-    atualizarCorDaBarra("dark"); // <-- Atualiza a barra
+    atualizarCorDaBarra("dark"); // Pinta de escuro
     if (toggle) toggle.checked = true;
   } else {
     document.documentElement.setAttribute("data-theme", "light");
-    atualizarCorDaBarra("light"); // <-- Atualiza a barra
+    atualizarCorDaBarra("light"); // Pinta de claro
     if (toggle) toggle.checked = false;
   }
 
-  // 3. Evento do botão (Toggle)
+  // Evento do botão de trocar tema
   if (toggle) {
     const newToggle = toggle.cloneNode(true);
     toggle.parentNode.replaceChild(newToggle, toggle);
 
     newToggle.addEventListener("change", (e) => {
-      if (e.target.checked) {
-        document.documentElement.setAttribute("data-theme", "dark");
-        localStorage.setItem("theme", "dark");
-        atualizarCorDaBarra("dark"); // <-- Atualiza a barra na mesma hora!
-      } else {
-        document.documentElement.setAttribute("data-theme", "light");
-        localStorage.setItem("theme", "light");
-        atualizarCorDaBarra("light"); // <-- Atualiza a barra na mesma hora!
-      }
+      const novoTema = e.target.checked ? "dark" : "light";
+
+      document.documentElement.setAttribute("data-theme", novoTema);
+      localStorage.setItem("theme", novoTema);
+      atualizarCorDaBarra(novoTema); // Atualiza a barra na mesma hora!
     });
   }
+}
+
+// GARANTIA MÁXIMA: Só roda o código depois que o HTML inteiro foi carregado
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", inicializarTema);
+} else {
+  inicializarTema();
 }
 
 // ============================================
