@@ -497,10 +497,10 @@ export function initPadronizador() {
     // ========================================================
     processedRows = [
       [
-        "Address Line 1", // Endereço completo para o GPS não errar
-        "Pacotes", // Pacotes do motorista
-        "Latitude", // Eixo Y (Se existir na planilha)
-        "Longitude", // Eixo X (Se existir na planilha)
+        "Address Line 1",
+        "Pacotes",
+        "Latitude",
+        "Longitude",
       ],
     ];
 
@@ -514,7 +514,7 @@ export function initPadronizador() {
       // 3. Formata o texto para a coluna Notes
       let notasParaMotorista = "";
       if (qtdPacotes > 0) {
-        notasParaMotorista = `Pacotes: ${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
+        notasParaMotorista = `${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
       }
 
       // 4. Formata o CEP com o tracinho (ex: 01001-000) pro Maps ler melhor
