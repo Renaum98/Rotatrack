@@ -304,7 +304,6 @@
   text-align: center;
   font-size: 0.9rem;
   color: var(--cor-texto-secundario);
-  /* Alterado de #718096 */
   padding-top: var(--espacamento-medio);
   line-height: 1.5;
 }
@@ -318,7 +317,6 @@
 .calendar-card {
   padding: 15px;
   background: var(--cor-branco);
-  /* Alterado de white */
   border-radius: 12px;
   box-shadow: var(--shadow-card, 0 2px 5px rgba(0, 0, 0, 0.05));
   margin-bottom: 20px;
@@ -360,7 +358,6 @@
   font-size: 0.8rem;
   font-weight: 600;
   color: var(--cor-texto-secundario);
-  /* Corrigido de --text-secondary */
   margin-bottom: 10px;
 }
 
@@ -394,7 +391,6 @@
 .day-badge {
   background-color: var(--cor-primaria);
   color: white;
-  /* Mantém branco pois é texto dentro de cor sólida */
   font-size: 0.65rem;
   width: 18px;
   height: 18px;
