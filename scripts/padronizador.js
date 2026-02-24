@@ -227,6 +227,7 @@ export function initPadronizador() {
   let sheetName = "";
   let isXlsx = false;
   let processedRows = [];
+  let dataDoArquivo = new Date(); // <-- Mémoria para guardar a data
 
   if (btnNovo) {
     btnNovo.addEventListener("click", () => {
@@ -271,6 +272,9 @@ export function initPadronizador() {
 
   function handleFile(file) {
     isXlsx = /\.xlsx?$/i.test(file.name);
+
+    // MÁGICA: Lê a data de modificação embutida no arquivo original!
+    dataDoArquivo = new Date(file.lastModified);
 
     dropzone.classList.add("file-ready");
     dropzone.querySelector('span[class*="material"]').textContent =
@@ -610,8 +614,11 @@ export function initPadronizador() {
       console.error("XLSX não carregado");
       return;
     }
+
+    // 1. Cria a planilha (ws) com os nossos dados finais
     const ws = XLSX.utils.aoa_to_sheet(processedRows);
 
+    // 2. Ajusta a largura visual das colunas no Excel
     const colWidths = processedRows[0].map((_, ci) => ({
       wch: Math.max(
         ...processedRows.map((r) => String(r[ci] || "").length),
@@ -620,15 +627,24 @@ export function initPadronizador() {
     }));
     ws["!cols"] = colWidths;
 
+    // 3. Cria o arquivo (wb) e joga a planilha lá dentro
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Paradas");
-    const hoje = new Date();
-    const dia = String(hoje.getDate()).padStart(2, "0");
-    const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-    const ano = hoje.getFullYear();
 
-    const nomeArquivo = `${dia}-${mes}-${ano}-Rota-Aprimorada.xlsx`;
+    // 4. Usa a data original do documento que fizemos upload
+    // (Se a variável dataDoArquivo não existir, ele usa a de hoje por segurança)
+    const dataUsada =
+      typeof dataDoArquivo !== "undefined" && dataDoArquivo
+        ? dataDoArquivo
+        : new Date();
+    const dia = String(dataUsada.getDate()).padStart(2, "0");
+    const mes = String(dataUsada.getMonth() + 1).padStart(2, "0");
+    const ano = dataUsada.getFullYear();
 
+    // 5. Nome final formatado
+    const nomeArquivo = `${dia}-${mes}-${ano}-Rotatrack.xlsx`;
+
+    // 6. Faz o download!
     XLSX.writeFile(wb, nomeArquivo);
   });
 
