@@ -100,12 +100,10 @@ function logradouroPareceEstrito(original, ruaBoa) {
 
   if (palavrasBoa.length === 0) return false;
 
-  // Para resgatar, TODAS as palavras principais da rua oficial
-  // devem estar contidas no endereço digitado errado.
   return palavrasBoa.every((p) => origNorm.includes(p));
 }
 
-// ── Monta endereço e separa em line1 / line2 usando o logradouro como âncora ──
+// ── Monta endereço e separa extraindo um complemento limpo ──
 function padronBuildAndSplit(original, logradouro) {
   const origNorm = normalizar(original);
   const viaNorm = normalizar(logradouro);
@@ -114,7 +112,6 @@ function padronBuildAndSplit(original, logradouro) {
     .split(/\s+/)
     .filter((p) => p.length > 3 && !PALAVRAS_IGNORADAS.has(p));
 
-  // Acha onde o nome da rua termina no texto bagunçado
   let fimLogradouro = 0;
   for (const palavra of palavrasChave) {
     const idx = origNorm.indexOf(palavra);
@@ -125,36 +122,41 @@ function padronBuildAndSplit(original, logradouro) {
 
   const restoOriginal = original.slice(fimLogradouro).trim();
 
-  // MÁGICA: Procura APENAS pela primeira sequência de números.
-  // Se for "204A, São Paulo", ele extrai apenas o "204".
-  const numMatch = restoOriginal.match(/(\d+)/);
+  // MÁGICA 1: Puxa o número e separa o resto do texto
+  const numMatch = restoOriginal.match(/(\d+)(.*)/);
   const numero = numMatch ? numMatch[1] : "";
+  let line2 = "";
 
-  // Monta a linha 1 limpa. Se não achar número, fica só a rua.
+  // MÁGICA 2: Captura só o primeiro bloco após o número (ex: "Apto 2") e ignora o resto
+  if (numMatch && numMatch[2]) {
+    const sujo = numMatch[2].replace(/^[,\s\-]+/, "").trim();
+    line2 = sujo.split(",")[0].trim();
+  }
+
   const line1 = numero ? `${logradouro}, ${numero}` : logradouro;
 
-  // Retorna a linha 1 perfeita e DESTRÓI a linha 2 (para não vazar lixo pra planilha)
-  return { line1, line2: "" };
+  return { line1, line2 };
 }
 
-// ── Versão sem âncora: separa só com base na estrutura do texto ──
+// ── Versão sem âncora: separa com base no primeiro número ──
 function splitAddressLines(fullAddress) {
   const s = String(fullAddress || "").trim();
 
-  // Encontra a primeira sequência de números puros
-  const numMatch = s.match(/(\d+)/);
-
-  // Se não tem número nenhum, devolve o texto limpo
+  const numMatch = s.match(/(\d+)(.*)/);
   if (!numMatch) return { line1: s, line2: "" };
 
   const numero = numMatch[1];
   const posNumero = s.indexOf(numMatch[0]);
 
-  // A rua é tudo o que vem antes do número (removendo vírgulas coladas)
-  const rua = s.slice(0, posNumero).replace(/[,\s]+$/, "").trim();
+  const rua = s
+    .slice(0, posNumero)
+    .replace(/[,\s]+$/, "")
+    .trim();
 
-  // Junta a Rua + Número puro, e zera o resto
-  return { line1: `${rua}, ${numero}`, line2: "" };
+  let line2 = numMatch[2].replace(/^[,\s\-]+/, "").trim();
+  line2 = line2.split(",")[0].trim(); // Isola o complemento
+
+  return { line1: `${rua}, ${numero}`, line2 };
 }
 
 // ── ViaCEP com cache ──
@@ -326,13 +328,9 @@ export function initPadronizador() {
       /bairro|neighborhood|district/i.test(h),
     );
     const cityCol = headers.findIndex((h) => /^city$|^cidade$/i.test(h));
-
-    // === NOVAS COLUNAS: ESTADO E COORDENADAS ===
     const estadoCol = headers.findIndex((h) =>
       /^estado$|^uf$|^state$/i.test(h),
     );
-    const latCol = headers.findIndex((h) => /latitude|lat/i.test(h));
-    const lngCol = headers.findIndex((h) => /longitude|lng|lon/i.test(h));
 
     if (addrCol < 0 || cepCol < 0) {
       label.textContent = "Coluna de endereço ou CEP não encontrada.";
@@ -354,13 +352,8 @@ export function initPadronizador() {
     const listaSuspeitos = [];
 
     const linhasProcessadas = [];
-
-    // Banco de ruas oficiais da própria planilha
     const ruasValidadasPlanilha = new Set();
 
-    // ========================================================
-    // PASSO 1: Validar no ViaCEP e Popular o Banco de Ruas
-    // ========================================================
     for (let i = 0; i < dataRows.length; i++) {
       const row = dataRows[i];
       const cepClean = String(row[cepCol] || "").replace(/\D/g, "");
@@ -377,25 +370,22 @@ export function initPadronizador() {
 
       if (via && via.logradouro) {
         if (logradouroParece(origAddr, via.logradouro)) {
-          // ✅ ViaCEP confirmado
           ({ line1, line2 } = padronBuildAndSplit(origAddr, via.logradouro));
-          ruasValidadasPlanilha.add(via.logradouro); // Salva rua boa no banco
+          ruasValidadasPlanilha.add(via.logradouro);
           status = "ok";
           totalCorrigidos++;
         } else {
-          status = "suspeito"; // Deixa pendente
+          status = "suspeito";
         }
       } else {
-        status = "sem_cep"; // Deixa pendente
+        status = "sem_cep";
       }
 
-      // Pega a cidade (prioriza a planilha, se não tiver, usa o ViaCEP)
       let cidadeCorreta = cityCol >= 0 ? String(row[cityCol] || "").trim() : "";
       if (!cidadeCorreta && via && via.localidade) {
         cidadeCorreta = via.localidade;
       }
 
-      // Pega o estado (prioriza o ViaCEP, se não tiver, usa a planilha)
       let estadoCorreto = "";
       if (via && via.uf) {
         estadoCorreto = via.uf;
@@ -412,10 +402,8 @@ export function initPadronizador() {
         status,
         linhaOriginal: i + 2,
         bairro: bairroCol >= 0 ? String(row[bairroCol] || "").trim() : "",
-        city: cidadeCorreta, // Cidade inteligente
-        estado: estadoCorreto, // Estado inteligente
-        lat: latCol >= 0 ? String(row[latCol] || "").trim() : "",
-        lng: lngCol >= 0 ? String(row[lngCol] || "").trim() : "",
+        city: cidadeCorreta,
+        estado: estadoCorreto,
         sequencias: seqCol >= 0 ? [String(row[seqCol] || "").trim()] : [],
       });
 
@@ -424,16 +412,12 @@ export function initPadronizador() {
       }
     }
 
-    // ========================================================
-    // PASSO 2: Resgatar Suspeitos usando o Banco de Ruas
-    // ========================================================
     label.textContent = "Cruzando dados para resgatar erros...";
 
     for (const item of linhasProcessadas) {
       if (item.status === "suspeito" || item.status === "sem_cep") {
         let resgatado = false;
 
-        // Tenta achar a rua digitada dentro das ruas válidas da própria planilha
         for (const ruaBoa of ruasValidadasPlanilha) {
           if (logradouroPareceEstrito(item.original, ruaBoa)) {
             const separacao = padronBuildAndSplit(item.original, ruaBoa);
@@ -447,32 +431,25 @@ export function initPadronizador() {
           }
         }
 
-        // Se a própria planilha não salvou ele, aplica o Fallback Textual antigo
         if (!resgatado) {
           const abbr = padronApplyAbbr(item.original);
 
-          // Se o ViaCEP achou a rua oficial, nós ignoramos o texto bagunçado (ex: "São Paulo, 200")
           if (item.viaCep) {
-            // Procura o primeiro número que aparecer no texto do cliente
             const numMatch = abbr.match(/(\d+)(.*)/);
 
             if (numMatch) {
-              item.line1 = `${item.viaCep}, ${numMatch[1]}`; // Junta a Rua Oficial + Número do cliente
-
-              // O que sobrar depois do número (ex: " , Apto 2") ele limpa as vírgulas e joga pro complemento
-              item.line2 = numMatch[2].replace(/^[,\s\-]+/, "").trim();
+              item.line1 = `${item.viaCep}, ${numMatch[1]}`;
+              let linha2Suja = numMatch[2].replace(/^[,\s\-]+/, "").trim();
+              item.line2 = linha2Suja.split(",")[0].trim();
             } else {
-              item.line1 = item.viaCep; // Se não tiver número nenhum, usa só a rua oficial
-              item.line2 = abbr; // Joga o texto bizarro pro complemento pra não perder a info
+              item.line1 = item.viaCep;
+              item.line2 = "";
             }
 
-            // MÁGICA: Como consertamos usando o CEP, ele não vai mais pra caixa vermelha!
             item.status = "ok";
             totalResgatados++;
             totalCorrigidos++;
-
           } else {
-            // PLANO D: Se o CEP também era inválido (não tem viaCep), aí sim ele vira suspeito
             const separacaoFallback = splitAddressLines(abbr);
             item.line1 = separacaoFallback.line1;
             item.line2 = separacaoFallback.line2;
@@ -489,18 +466,19 @@ export function initPadronizador() {
       }
     }
 
-    // Segunda passagem: agrupar endereços duplicados
     const agrupadas = agruparEnderecos(linhasProcessadas);
 
     // ========================================================
-    // Montar planilha final (PADRÃO GOOGLE MAPS + CIRCUIT)
+    // Montar planilha final (SEM LAT/LNG, COM COMPLEMENTO SEPARADO)
     // ========================================================
     processedRows = [
       [
-        "Address Line 1",
-        "Pacotes",
-        "Latitude",
-        "Longitude",
+        "Address Line 1", // Rua e Número (Obrigatório pro mapa)
+        "Address Line 2",
+        //"City", // Cidade (Reconhecimento automático)
+        //"State", // Estado (Reconhecimento automático)
+        "Zip", // CEP (Reconhecimento automático)
+        "Notes", // Recado pro motorista (Nossos pacotes)
       ],
     ];
 
@@ -523,34 +501,17 @@ export function initPadronizador() {
         cepFormatado = `${cepFormatado.slice(0, 5)}-${cepFormatado.slice(5)}`;
       }
 
-      // 5. Constrói o endereço blindado: Rua, Número, Cidade, Estado, CEP, País
-      const partesEndereco = [
-        item.line1,
-        item.city,
-        item.estado,
-        cepFormatado,
-        "Brasil", // O país cravado ajuda o Google a nunca mandar pra fora do país
-      ];
-
-      // O filter(Boolean) remove espaços vazios caso falte estado ou cidade
-      const enderecoCompletoGoogleMaps = partesEndereco
-        .filter(Boolean)
-        .join(", ")
-        .split(",")
-        .map((parte) => parte.trim())
-        .filter(Boolean)
-        .join(", ");
-
-      // 6. Adiciona a linha na planilha final
+      // 5. Adiciona a linha na planilha final perfeitamente fatiada
       processedRows.push([
-        enderecoCompletoGoogleMaps, // Address Line 1 (Endereço Completo)
-        notasParaMotorista, // Notes (Pacotes)
-        item.lat, // Latitude (Se capturada)
-        item.lng, // Longitude (Se capturada)
+        item.line1, // Address Line 1 (Ex: Rua Almirante Barroso, 592)
+        item.line2,
+        //item.city, // City (Ex: São Paulo)
+        //item.estado, // State (Ex: SP)
+        cepFormatado, // Zip (Ex: 03011-000)
+        notasParaMotorista, // Notes (Ex: PACOTES: 66, 67 (Total: 2))
       ]);
     }
 
-    // Resumo
     const totalParadas = agrupadas.length;
     const totalOriginal = linhasProcessadas.length;
     const totalAgrupados = totalOriginal - totalParadas;
@@ -563,7 +524,6 @@ export function initPadronizador() {
     bar.style.width = "100%";
     btnRow.style.display = "flex";
 
-    // ── Exibir suspeitos dinamicamente ──
     const anterior = document.getElementById("padronSuspeitosBox");
     if (anterior) anterior.remove();
 
@@ -658,7 +618,6 @@ export function initPadronizador() {
 
     const nomeArquivo = `${dia}-${mes}-${ano}-Rota-Aprimorada.xlsx`;
 
-    // Salva o arquivo com o novo nome
     XLSX.writeFile(wb, nomeArquivo);
   });
 
