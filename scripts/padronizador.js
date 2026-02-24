@@ -369,15 +369,13 @@ export function initPadronizador() {
       const via = await padronFetchViaCEP(cepClean);
 
       if (via && via.logradouro) {
-        if (logradouroParece(origAddr, via.logradouro)) {
-          ({ line1, line2 } = padronBuildAndSplit(origAddr, via.logradouro));
-          ruasValidadasPlanilha.add(via.logradouro);
-          status = "ok";
-          totalCorrigidos++;
-        } else {
-          status = "suspeito";
-        }
+        // MÁGICA: Confia 100% no ViaCEP! Ignora o texto do cliente e pega só o número.
+        ({ line1, line2 } = padronBuildAndSplit(origAddr, via.logradouro));
+        ruasValidadasPlanilha.add(via.logradouro);
+        status = "ok";
+        totalCorrigidos++;
       } else {
+        // Só vai para o resgate da planilha se o CEP for inválido ou não existir
         status = "sem_cep";
       }
 
@@ -386,6 +384,7 @@ export function initPadronizador() {
         cidadeCorreta = via.localidade;
       }
 
+      // Pega o estado (FOI ESSA PARTE QUE SUMIU E CAUSOU O ERRO!)
       let estadoCorreto = "";
       if (via && via.uf) {
         estadoCorreto = via.uf;
@@ -393,6 +392,15 @@ export function initPadronizador() {
         estadoCorreto = String(row[estadoCol] || "").trim();
       }
 
+      // Pega o bairro (prioriza o ViaCEP, se não tiver, usa a planilha)
+      let bairroCorreto = "";
+      if (via && via.bairro) {
+        bairroCorreto = via.bairro;
+      } else if (bairroCol >= 0) {
+        bairroCorreto = String(row[bairroCol] || "").trim();
+      }
+
+      // Salva tudo na memória
       linhasProcessadas.push({
         original: origAddr,
         cep: cepClean,
@@ -401,9 +409,9 @@ export function initPadronizador() {
         line2,
         status,
         linhaOriginal: i + 2,
-        bairro: bairroCol >= 0 ? String(row[bairroCol] || "").trim() : "",
+        bairro: bairroCorreto,
         city: cidadeCorreta,
-        estado: estadoCorreto,
+        estado: estadoCorreto, // Agora ele acha a variável sem problemas!
         sequencias: seqCol >= 0 ? [String(row[seqCol] || "").trim()] : [],
       });
 
@@ -473,11 +481,9 @@ export function initPadronizador() {
     // ========================================================
     processedRows = [
       [
-        "Address Line 1", // Rua e Número (Obrigatório pro mapa)
-        "Address Line 2",
-        //"City", // Cidade (Reconhecimento automático)
-        //"State", // Estado (Reconhecimento automático)
-        "Zip", // CEP (Reconhecimento automático)
+        "Address Line 1", // Rua, Número, Bairro (Tudo na mesma linha)
+        "Address Line 2", // Complemento (Ex: Apto 2)
+        "Zip", // CEP isolado em sua própria coluna
         "Notes", // Recado pro motorista (Nossos pacotes)
       ],
     ];
@@ -495,20 +501,25 @@ export function initPadronizador() {
         notasParaMotorista = `${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
       }
 
-      // 4. Formata o CEP com o tracinho (ex: 01001-000) pro Maps ler melhor
+      // 4. Formata o CEP com o tracinho (ex: 03011-000)
       let cepFormatado = item.cep;
       if (cepFormatado && cepFormatado.length === 8) {
         cepFormatado = `${cepFormatado.slice(0, 5)}-${cepFormatado.slice(5)}`;
       }
 
-      // 5. Adiciona a linha na planilha final perfeitamente fatiada
+      // 5. MÁGICA: Junta a Rua/Número com o Bairro que veio na sua planilha
+      let linha1ComBairro = item.line1;
+      if (item.bairro) {
+        // Se a planilha original tinha bairro, ele adiciona (Ex: Rua Miller, 297, Brás)
+        linha1ComBairro = `${item.line1}, ${item.bairro}`;
+      }
+
+      // 6. Adiciona a linha na planilha final
       processedRows.push([
-        item.line1, // Address Line 1 (Ex: Rua Almirante Barroso, 592)
-        item.line2,
-        //item.city, // City (Ex: São Paulo)
-        //item.estado, // State (Ex: SP)
+        linha1ComBairro, // Address Line 1 (Ex: Rua Maria Marcolina, 204, Brás)
+        item.line2, // Address Line 2 (Ex: Loja 2)
         cepFormatado, // Zip (Ex: 03011-000)
-        notasParaMotorista, // Notes (Ex: PACOTES: 66, 67 (Total: 2))
+        notasParaMotorista, // Notes (Ex: BR260798 (Total: 1))
       ]);
     }
 
