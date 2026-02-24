@@ -76,19 +76,6 @@ function normalizar(str) {
     .trim();
 }
 
-// ── Validação cruzada ViaCEP vs endereço original ──
-function logradouroParece(original, viaLogradouro) {
-  const origNorm = normalizar(original);
-  const viaNorm = normalizar(viaLogradouro);
-
-  const palavrasVia = viaNorm
-    .split(/\s+/)
-    .filter((p) => p.length > 3 && !PALAVRAS_IGNORADAS.has(p));
-
-  if (palavrasVia.length === 0) return true;
-  return palavrasVia.some((p) => origNorm.includes(p));
-}
-
 // ── Validação ESTRITA para resgate interno usando a própria planilha ──
 function logradouroPareceEstrito(original, ruaBoa) {
   const origNorm = normalizar(original);
@@ -383,19 +370,6 @@ export function initPadronizador() {
         status = "sem_cep";
       }
 
-      let cidadeCorreta = cityCol >= 0 ? String(row[cityCol] || "").trim() : "";
-      if (!cidadeCorreta && via && via.localidade) {
-        cidadeCorreta = via.localidade;
-      }
-
-      // Pega o estado (FOI ESSA PARTE QUE SUMIU E CAUSOU O ERRO!)
-      let estadoCorreto = "";
-      if (via && via.uf) {
-        estadoCorreto = via.uf;
-      } else if (estadoCol >= 0) {
-        estadoCorreto = String(row[estadoCol] || "").trim();
-      }
-
       // Pega o bairro (prioriza o ViaCEP, se não tiver, usa a planilha)
       let bairroCorreto = "";
       if (via && via.bairro) {
@@ -414,7 +388,6 @@ export function initPadronizador() {
         status,
         linhaOriginal: i + 2,
         bairro: bairroCorreto,
-        city: cidadeCorreta,
         estado: estadoCorreto, // Agora ele acha a variável sem problemas!
         sequencias: seqCol >= 0 ? [String(row[seqCol] || "").trim()] : [],
       });
