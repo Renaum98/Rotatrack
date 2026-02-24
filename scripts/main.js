@@ -99,6 +99,13 @@ function inicializarTema() {
   }
 }
 
+// GARANTIA MÁXIMA: Só roda o código depois que o HTML inteiro foi carregado
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", inicializarTema);
+} else {
+  inicializarTema();
+}
+
 // ============================================
 // CONFIGURAÇÃO DE EVENT LISTENERS
 // ============================================
