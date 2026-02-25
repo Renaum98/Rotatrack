@@ -17,8 +17,8 @@ const PADRON_ABBR = [
   [/\bApt\.\s*/gi, "Apartamento "],
   [/\bApto\b\s*/gi, "Apartamento "],
   [/\bSl\.\s*/gi, "Sala "],
-  [/\bDr\.\s*/gi, "Doutor "],
-  [/\bDra\.\s*/gi, "Doutora "],
+  [/\bDr\.?\s+/gi, "Doutor "],
+  [/\bDra\.?\s+/gi, "Doutora "],
   [/\bProf\.\s*/gi, "Professor "],
   [/\bProfa\.\s*/gi, "Professora "],
   [/\bEng\.\s*/gi, "Engenheiro "],
@@ -63,6 +63,22 @@ function padronApplyAbbr(address) {
   let s = String(address || "");
   for (const [rx, rep] of PADRON_ABBR) s = s.replace(rx, rep);
   return s.replace(/\s{2,}/g, " ").trim();
+}
+
+// ── Formatação Visual (Primeira letra maiúscula, expande abreviações) ──
+function formatarNomeBonito(endereco) {
+  // 1. Expande as abreviações (r -> Rua, dr -> Doutor)
+  let expandido = padronApplyAbbr(endereco);
+
+  // 2. Transforma em Title Case (Rua Doutor Euclides Barros)
+  return expandido.replace(/\w\S*/g, function (txt) {
+    const min = txt.toLowerCase();
+    // Ignora preposições para não ficar "Rua De São Paulo"
+    if (["de", "da", "do", "das", "dos", "e"].includes(min)) {
+      return min;
+    }
+    return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();
+  });
 }
 
 // ── Normaliza string para comparação ──
@@ -423,7 +439,10 @@ export function initPadronizador() {
     for (let i = 0; i < dataRows.length; i++) {
       const row = dataRows[i];
       const cepClean = String(row[cepCol] || "").replace(/\D/g, "");
-      const origAddr = String(row[addrCol] || "").trim();
+
+      // MÁGICA: Pega o texto bruto e já formata bonito antes de qualquer coisa!
+      let origAddrBruto = String(row[addrCol] || "").trim();
+      const origAddr = formatarNomeBonito(origAddrBruto);
 
       const pct = Math.round(((i + 1) / total) * 100);
       bar.style.width = pct + "%";
@@ -512,31 +531,28 @@ export function initPadronizador() {
         if (!resgatado) {
           const abbr = padronApplyAbbr(item.original);
 
+          // PLANO C AGORA É SEGURO: Mantém o texto do cliente e apenas tenta formatar
+          const separacaoFallback = splitAddressLines(abbr);
+          item.line1 = separacaoFallback.line1;
+          item.line2 = separacaoFallback.line2;
+
+          totalSuspeitos++;
+
+          // Define a mensagem de alerta dependendo se o CEP existe ou não
+          let avisoViaCep = "";
           if (item.viaCep) {
-            // MÁGICA: Centralizamos a regra. Ele passa pela função inteligente e pega a vírgula certa!
-            const separacaoForcada = padronBuildAndSplit(abbr, item.viaCep);
-            item.line1 = separacaoForcada.line1;
-            item.line2 = separacaoForcada.line2;
-
-            item.status = "ok";
-            resgatado = true;
-            tipoDeResgate = "Forçado pelo CEP";
-            totalResgatados++;
-            totalCorrigidos++;
+            avisoViaCep = `CEP divergente aponta para: ${item.viaCep} (Mantido o original)`;
           } else {
-            // PLANO D: Sem ViaCEP e não foi resgatado, vai para a caixa de suspeitos
-            const separacaoFallback = splitAddressLines(abbr);
-            item.line1 = separacaoFallback.line1;
-            item.line2 = separacaoFallback.line2;
-
-            totalSuspeitos++;
-            listaSuspeitos.push({
-              linha: item.linhaOriginal,
-              cep: item.cep,
-              original: item.original,
-              viaCep: "CEP Inválido/Não encontrado",
-            });
+            avisoViaCep = "CEP Inválido/Não encontrado";
           }
+
+          // Joga para a Caixa Vermelha para você revisar com calma
+          listaSuspeitos.push({
+            linha: item.linhaOriginal,
+            cep: item.cep,
+            original: item.original,
+            viaCep: avisoViaCep,
+          });
         }
 
         // Salva para mostrar na tela Laranja
@@ -560,35 +576,36 @@ export function initPadronizador() {
       [
         "Address Line 1", // Rua, Número, Bairro (Tudo na mesma linha)
         "Address Line 2", // Complemento (Ex: Apto 2)
-        "Zip", // CEP isolado
-        "Notes", // Recado pro motorista
+        "City", // Cidade (Substituiu o Zip)
+        "Notes", // Recado pro motorista (Nossos pacotes)
       ],
     ];
 
     for (const item of agrupadas) {
+      // 1. Filtra as sequências válidas (remove vazias)
       const sequenciasValidas = item.sequencias.filter(Boolean);
+
+      // 2. Conta a quantidade de pacotes
       const qtdPacotes = sequenciasValidas.length;
 
+      // 3. Formata o texto para a coluna Notes
       let notasParaMotorista = "";
       if (qtdPacotes > 0) {
         notasParaMotorista = `${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
       }
 
-      let cepFormatado = item.cep;
-      if (cepFormatado && cepFormatado.length === 8) {
-        cepFormatado = `${cepFormatado.slice(0, 5)}-${cepFormatado.slice(5)}`;
-      }
-
+      // 4. Junta a Rua/Número com o Bairro que veio na sua planilha
       let linha1ComBairro = item.line1;
       if (item.bairro) {
         linha1ComBairro = `${item.line1}, ${item.bairro}`;
       }
 
+      // 5. Adiciona a linha na planilha final puxando a CIDADE
       processedRows.push([
-        linha1ComBairro,
-        item.line2,
-        cepFormatado,
-        notasParaMotorista,
+        linha1ComBairro, // Address Line 1 (Ex: Rua Maria Marcolina, 204, Brás)
+        item.line2, // Address Line 2 (Ex: Loja 2)
+        item.city, // City (Ex: São Paulo) <-- A MÁGICA AQUI
+        notasParaMotorista, // Notes (Ex: BR260798 (Total: 1))
       ]);
     }
 
