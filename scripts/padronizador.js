@@ -373,13 +373,17 @@ export function initPadronizador() {
       const via = await padronFetchViaCEP(cepClean);
 
       if (via && via.logradouro) {
-        // MÁGICA: Confia 100% no ViaCEP! Ignora o texto do cliente e pega só o número.
-        ({ line1, line2 } = padronBuildAndSplit(origAddr, via.logradouro));
-        ruasValidadasPlanilha.add(via.logradouro);
-        status = "ok";
-        totalCorrigidos++;
+        // Voltou a inteligência antiga: Cruza o ViaCEP com o texto do cliente
+        if (logradouroParece(origAddr, via.logradouro)) {
+          ({ line1, line2 } = padronBuildAndSplit(origAddr, via.logradouro));
+          ruasValidadasPlanilha.add(via.logradouro);
+          status = "ok";
+          totalCorrigidos++;
+        } else {
+          // Se o nome da rua não bater nada com o ViaCEP, vira suspeito para ir pro resgate
+          status = "suspeito";
+        }
       } else {
-        // Só vai para o resgate da planilha se o CEP for inválido ou não existir
         status = "sem_cep";
       }
 
