@@ -65,7 +65,7 @@ function padronApplyAbbr(address) {
   return s.replace(/\s{2,}/g, " ").trim();
 }
 
-// ── Normaliza string para comparação (sem acentos, minúsculo, sem pontuação) ──
+// ── Normaliza string para comparação ──
 function normalizar(str) {
   return String(str)
     .toLowerCase()
@@ -122,18 +122,55 @@ function padronBuildAndSplit(original, logradouro) {
 
   const restoOriginal = original.slice(fimLogradouro).trim();
 
-  // MÁGICA 1: Puxa o número e separa o resto do texto
-  const numMatch = restoOriginal.match(/(\d+)(.*)/);
-  const numero = numMatch ? numMatch[1] : "";
+  let numero = "";
   let line2 = "";
+  let compAntes = "";
+  let compDepois = "";
 
-  // MÁGICA 2: Captura só o primeiro bloco após o número (ex: "Apto 2") e ignora o resto
-  if (numMatch && numMatch[2]) {
-    const sujo = numMatch[2].replace(/^[,\s\-]+/, "").trim();
-    line2 = sujo.split(",")[0].trim();
+  // MÁGICA 1: Procura a primeira vírgula
+  const idxVirgula = restoOriginal.indexOf(",");
+
+  if (idxVirgula !== -1) {
+    compAntes = restoOriginal.slice(0, idxVirgula).trim(); // Ex: "fashionelas box 106"
+    const aposVirgula = restoOriginal.slice(idxVirgula + 1).trim();
+
+    // Pega os primeiros dígitos logo após a vírgula
+    const numMatch = aposVirgula.match(/^(\d+)(.*)/);
+    if (numMatch) {
+      numero = numMatch[1]; // Ex: "55"
+      compDepois = numMatch[2]
+        .replace(/^[,\s\-]+/, "")
+        .trim()
+        .split(",")[0]
+        .trim(); // Ex: "próximo a zelo"
+    }
+  }
+
+  // MÁGICA 2: Fallback (se não tiver vírgula, corta no primeiro número)
+  if (!numero) {
+    const numMatch = restoOriginal.match(/(.*?)(\d+)(.*)/);
+    if (numMatch) {
+      compAntes = numMatch[1].replace(/^[,\s\-]+/, "").trim();
+      numero = numMatch[2];
+      compDepois = numMatch[3]
+        .replace(/^[,\s\-]+/, "")
+        .trim()
+        .split(",")[0]
+        .trim();
+    }
   }
 
   const line1 = numero ? `${logradouro}, ${numero}` : logradouro;
+
+  // Montagem do Complemento: Salva o texto que estava antes do número (se houver) e o de depois
+  if (compAntes && numero) {
+    line2 = compAntes;
+    if (compDepois && compDepois.length > 1) {
+      line2 += ` (${compDepois})`; // Junta tudo: "fashionelas box 106 (próximo a zelo)"
+    }
+  } else {
+    line2 = compDepois;
+  }
 
   return { line1, line2 };
 }
@@ -142,21 +179,42 @@ function padronBuildAndSplit(original, logradouro) {
 function splitAddressLines(fullAddress) {
   const s = String(fullAddress || "").trim();
 
-  const numMatch = s.match(/(\d+)(.*)/);
-  if (!numMatch) return { line1: s, line2: "" };
+  let rua = "";
+  let numero = "";
+  let line2 = "";
 
-  const numero = numMatch[1];
-  const posNumero = s.indexOf(numMatch[0]);
+  const idxVirgula = s.indexOf(",");
 
-  const rua = s
-    .slice(0, posNumero)
-    .replace(/[,\s]+$/, "")
-    .trim();
+  if (idxVirgula !== -1) {
+    rua = s.slice(0, idxVirgula).trim(); // Tudo antes da vírgula
+    const aposVirgula = s.slice(idxVirgula + 1).trim();
 
-  let line2 = numMatch[2].replace(/^[,\s\-]+/, "").trim();
-  line2 = line2.split(",")[0].trim(); // Isola o complemento
+    const numMatch = aposVirgula.match(/^(\d+)(.*)/);
+    if (numMatch) {
+      numero = numMatch[1];
+      line2 = numMatch[2]
+        .replace(/^[,\s\-]+/, "")
+        .trim()
+        .split(",")[0]
+        .trim();
+      return { line1: `${rua}, ${numero}`, line2 };
+    }
+  }
 
-  return { line1: `${rua}, ${numero}`, line2 };
+  // Fallback (não tem vírgula, corta no primeiro número)
+  const numMatch = s.match(/(.*?)(\d+)(.*)/);
+  if (numMatch) {
+    rua = numMatch[1].replace(/[,\s\-]+$/, "").trim();
+    numero = numMatch[2];
+    line2 = numMatch[3]
+      .replace(/^[,\s\-]+/, "")
+      .trim()
+      .split(",")[0]
+      .trim();
+    return { line1: `${rua}, ${numero}`, line2 };
+  }
+
+  return { line1: s, line2: "" };
 }
 
 // ── ViaCEP com cache ──
@@ -227,7 +285,7 @@ export function initPadronizador() {
   let sheetName = "";
   let isXlsx = false;
   let processedRows = [];
-  let dataDoArquivo = new Date(); // <-- Mémoria para guardar a data
+  let dataDoArquivo = new Date(); // Mémoria para guardar a data
 
   if (btnNovo) {
     btnNovo.addEventListener("click", () => {
@@ -246,6 +304,9 @@ export function initPadronizador() {
 
       const suspeitosBox = document.getElementById("padronSuspeitosBox");
       if (suspeitosBox) suspeitosBox.remove();
+
+      const resgatadosBox = document.getElementById("padronResgatadosBox");
+      if (resgatadosBox) resgatadosBox.remove();
 
       workbook = null;
       sheetName = "";
@@ -350,10 +411,11 @@ export function initPadronizador() {
     const total = dataRows.length;
 
     let totalCorrigidos = 0;
-    let totalApenasAbrev = 0;
     let totalSuspeitos = 0;
     let totalResgatados = 0;
+
     const listaSuspeitos = [];
+    const listaResgatados = [];
 
     const linhasProcessadas = [];
     const ruasValidadasPlanilha = new Set();
@@ -373,14 +435,13 @@ export function initPadronizador() {
       const via = await padronFetchViaCEP(cepClean);
 
       if (via && via.logradouro) {
-        // Voltou a inteligência antiga: Cruza o ViaCEP com o texto do cliente
+        // Inteligência de validação cruzada
         if (logradouroParece(origAddr, via.logradouro)) {
           ({ line1, line2 } = padronBuildAndSplit(origAddr, via.logradouro));
           ruasValidadasPlanilha.add(via.logradouro);
           status = "ok";
           totalCorrigidos++;
         } else {
-          // Se o nome da rua não bater nada com o ViaCEP, vira suspeito para ir pro resgate
           status = "suspeito";
         }
       } else {
@@ -392,7 +453,6 @@ export function initPadronizador() {
         cidadeCorreta = via.localidade;
       }
 
-      // Pega o estado (FOI ESSA PARTE QUE SUMIU E CAUSOU O ERRO!)
       let estadoCorreto = "";
       if (via && via.uf) {
         estadoCorreto = via.uf;
@@ -400,7 +460,6 @@ export function initPadronizador() {
         estadoCorreto = String(row[estadoCol] || "").trim();
       }
 
-      // Pega o bairro (prioriza o ViaCEP, se não tiver, usa a planilha)
       let bairroCorreto = "";
       if (via && via.bairro) {
         bairroCorreto = via.bairro;
@@ -408,7 +467,6 @@ export function initPadronizador() {
         bairroCorreto = String(row[bairroCol] || "").trim();
       }
 
-      // Salva tudo na memória
       linhasProcessadas.push({
         original: origAddr,
         cep: cepClean,
@@ -419,7 +477,7 @@ export function initPadronizador() {
         linhaOriginal: i + 2,
         bairro: bairroCorreto,
         city: cidadeCorreta,
-        estado: estadoCorreto, // Agora ele acha a variável sem problemas!
+        estado: estadoCorreto,
         sequencias: seqCol >= 0 ? [String(row[seqCol] || "").trim()] : [],
       });
 
@@ -433,7 +491,9 @@ export function initPadronizador() {
     for (const item of linhasProcessadas) {
       if (item.status === "suspeito" || item.status === "sem_cep") {
         let resgatado = false;
+        let tipoDeResgate = "";
 
+        // Tenta achar na própria planilha
         for (const ruaBoa of ruasValidadasPlanilha) {
           if (logradouroPareceEstrito(item.original, ruaBoa)) {
             const separacao = padronBuildAndSplit(item.original, ruaBoa);
@@ -441,31 +501,30 @@ export function initPadronizador() {
             item.line2 = separacao.line2;
 
             resgatado = true;
+            tipoDeResgate = "Achou na Planilha";
             totalResgatados++;
             totalCorrigidos++;
             break;
           }
         }
 
+        // Se não achou, força pelo CEP
         if (!resgatado) {
           const abbr = padronApplyAbbr(item.original);
 
           if (item.viaCep) {
-            const numMatch = abbr.match(/(\d+)(.*)/);
-
-            if (numMatch) {
-              item.line1 = `${item.viaCep}, ${numMatch[1]}`;
-              let linha2Suja = numMatch[2].replace(/^[,\s\-]+/, "").trim();
-              item.line2 = linha2Suja.split(",")[0].trim();
-            } else {
-              item.line1 = item.viaCep;
-              item.line2 = "";
-            }
+            // MÁGICA: Centralizamos a regra. Ele passa pela função inteligente e pega a vírgula certa!
+            const separacaoForcada = padronBuildAndSplit(abbr, item.viaCep);
+            item.line1 = separacaoForcada.line1;
+            item.line2 = separacaoForcada.line2;
 
             item.status = "ok";
+            resgatado = true;
+            tipoDeResgate = "Forçado pelo CEP";
             totalResgatados++;
             totalCorrigidos++;
           } else {
+            // PLANO D: Sem ViaCEP e não foi resgatado, vai para a caixa de suspeitos
             const separacaoFallback = splitAddressLines(abbr);
             item.line1 = separacaoFallback.line1;
             item.line2 = separacaoFallback.line2;
@@ -479,55 +538,57 @@ export function initPadronizador() {
             });
           }
         }
+
+        // Salva para mostrar na tela Laranja
+        if (resgatado) {
+          listaResgatados.push({
+            linha: item.linhaOriginal,
+            original: item.original,
+            resultado: item.line1,
+            motivo: tipoDeResgate,
+          });
+        }
       }
     }
 
     const agrupadas = agruparEnderecos(linhasProcessadas);
 
     // ========================================================
-    // Montar planilha final (SEM LAT/LNG, COM COMPLEMENTO SEPARADO)
+    // Montar planilha final (Padrão Oficial)
     // ========================================================
     processedRows = [
       [
         "Address Line 1", // Rua, Número, Bairro (Tudo na mesma linha)
         "Address Line 2", // Complemento (Ex: Apto 2)
-        "Zip", // CEP isolado em sua própria coluna
-        "Notes", // Recado pro motorista (Nossos pacotes)
+        "Zip", // CEP isolado
+        "Notes", // Recado pro motorista
       ],
     ];
 
     for (const item of agrupadas) {
-      // 1. Filtra as sequências válidas (remove vazias)
       const sequenciasValidas = item.sequencias.filter(Boolean);
-
-      // 2. Conta a quantidade de pacotes
       const qtdPacotes = sequenciasValidas.length;
 
-      // 3. Formata o texto para a coluna Notes
       let notasParaMotorista = "";
       if (qtdPacotes > 0) {
         notasParaMotorista = `${sequenciasValidas.join(", ")} (Total: ${qtdPacotes})`;
       }
 
-      // 4. Formata o CEP com o tracinho (ex: 03011-000)
       let cepFormatado = item.cep;
       if (cepFormatado && cepFormatado.length === 8) {
         cepFormatado = `${cepFormatado.slice(0, 5)}-${cepFormatado.slice(5)}`;
       }
 
-      // 5. MÁGICA: Junta a Rua/Número com o Bairro que veio na sua planilha
       let linha1ComBairro = item.line1;
       if (item.bairro) {
-        // Se a planilha original tinha bairro, ele adiciona (Ex: Rua Miller, 297, Brás)
         linha1ComBairro = `${item.line1}, ${item.bairro}`;
       }
 
-      // 6. Adiciona a linha na planilha final
       processedRows.push([
-        linha1ComBairro, // Address Line 1 (Ex: Rua Maria Marcolina, 204, Brás)
-        item.line2, // Address Line 2 (Ex: Loja 2)
-        cepFormatado, // Zip (Ex: 03011-000)
-        notasParaMotorista, // Notes (Ex: BR260798 (Total: 1))
+        linha1ComBairro,
+        item.line2,
+        cepFormatado,
+        notasParaMotorista,
       ]);
     }
 
@@ -543,8 +604,11 @@ export function initPadronizador() {
     bar.style.width = "100%";
     btnRow.style.display = "flex";
 
-    const anterior = document.getElementById("padronSuspeitosBox");
-    if (anterior) anterior.remove();
+    // ========================================================
+    // DESENHAR CAIXA VERMELHA (SUSPEITOS)
+    // ========================================================
+    const anteriorSuspeitos = document.getElementById("padronSuspeitosBox");
+    if (anteriorSuspeitos) anteriorSuspeitos.remove();
 
     if (listaSuspeitos.length > 0) {
       const box = document.createElement("div");
@@ -610,6 +674,84 @@ export function initPadronizador() {
       box.appendChild(ul);
       progress.insertAdjacentElement("afterend", box);
     }
+
+    // ========================================================
+    // DESENHAR CAIXA LARANJA (RESGATADOS)
+    // ========================================================
+    const anteriorResgatados = document.getElementById("padronResgatadosBox");
+    if (anteriorResgatados) anteriorResgatados.remove();
+
+    if (listaResgatados.length > 0) {
+      const boxResgatados = document.createElement("div");
+      boxResgatados.id = "padronResgatadosBox";
+      Object.assign(boxResgatados.style, {
+        marginTop: "12px",
+        background: "rgba(221, 107, 32, 0.06)",
+        border: "1px solid rgba(221, 107, 32, 0.3)",
+        borderRadius: "10px",
+        padding: "12px",
+      });
+
+      const tituloResgatados = document.createElement("div");
+      Object.assign(tituloResgatados.style, {
+        display: "flex",
+        alignItems: "center",
+        gap: "6px",
+        fontSize: "0.75rem",
+        fontWeight: "700",
+        color: "#dd6b20",
+        fontFamily: "'Montserrat', sans-serif",
+        marginBottom: "10px",
+      });
+      tituloResgatados.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px">info</span> Endereços resgatados (Confira antes de exportar)`;
+      boxResgatados.appendChild(tituloResgatados);
+
+      const ulResgatados = document.createElement("ul");
+      Object.assign(ulResgatados.style, {
+        listStyle: "none",
+        padding: "0",
+        margin: "0",
+        display: "flex",
+        flexDirection: "column",
+        gap: "8px",
+      });
+
+      for (const r of listaResgatados) {
+        const liResgatados = document.createElement("li");
+        Object.assign(liResgatados.style, {
+          display: "flex",
+          flexDirection: "column",
+          gap: "2px",
+          padding: "8px 10px",
+          background: "var(--cor-branco)",
+          borderRadius: "8px",
+          border: "1px solid var(--cor-borda)",
+          fontFamily: "'Montserrat', sans-serif",
+        });
+        liResgatados.innerHTML = `
+          <span style="font-size:0.7rem;font-weight:700;color:#dd6b20;text-transform:uppercase;letter-spacing:0.5px">
+            Linha ${r.linha} · ${r.motivo}
+          </span>
+          <span style="font-size:0.75rem;color:var(--cor-texto-secundario);line-height:1.4">
+            ❌ <b>Original:</b> ${r.original}
+          </span>
+          <span style="font-size:0.75rem;color:var(--cor-texto-secundario);line-height:1.4">
+            ✅ <b>Ficou:</b> ${r.resultado}
+          </span>
+        `;
+        ulResgatados.appendChild(liResgatados);
+      }
+
+      boxResgatados.appendChild(ulResgatados);
+
+      const boxSuspeitosExistente =
+        document.getElementById("padronSuspeitosBox");
+      if (boxSuspeitosExistente) {
+        boxSuspeitosExistente.insertAdjacentElement("afterend", boxResgatados);
+      } else {
+        progress.insertAdjacentElement("afterend", boxResgatados);
+      }
+    }
   }
 
   // ── Download ──
@@ -619,10 +761,8 @@ export function initPadronizador() {
       return;
     }
 
-    // 1. Cria a planilha (ws) com os nossos dados finais
     const ws = XLSX.utils.aoa_to_sheet(processedRows);
 
-    // 2. Ajusta a largura visual das colunas no Excel
     const colWidths = processedRows[0].map((_, ci) => ({
       wch: Math.max(
         ...processedRows.map((r) => String(r[ci] || "").length),
@@ -631,12 +771,9 @@ export function initPadronizador() {
     }));
     ws["!cols"] = colWidths;
 
-    // 3. Cria o arquivo (wb) e joga a planilha lá dentro
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, ws, "Paradas");
 
-    // 4. Usa a data original do documento que fizemos upload
-    // (Se a variável dataDoArquivo não existir, ele usa a de hoje por segurança)
     const dataUsada =
       typeof dataDoArquivo !== "undefined" && dataDoArquivo
         ? dataDoArquivo
@@ -645,10 +782,8 @@ export function initPadronizador() {
     const mes = String(dataUsada.getMonth() + 1).padStart(2, "0");
     const ano = dataUsada.getFullYear();
 
-    // 5. Nome final formatado
-    const nomeArquivo = `${dia}-${mes}-${ano}-Rotatrack.xlsx`;
+    const nomeArquivo = `${dia}-${mes}-${ano}-rotatrack.xlsx`;
 
-    // 6. Faz o download!
     XLSX.writeFile(wb, nomeArquivo);
   });
 
