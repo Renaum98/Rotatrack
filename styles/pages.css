@@ -1077,6 +1077,42 @@ body.dark-mode .padron-progress-track {
 }
 
 /* =========================================
+   ANIMAÇÕES DE ENTRADA (TROCA DE ABAS)
+   ========================================= */
+
+/* Header de todas as páginas */
+.logo-site {
+  animation: slideRight 0.4s ease-out both;
+}
+
+/* --- Início: cards em cascata --- */
+#page-inicio .container > *:nth-child(1) { animation: slideUp 0.5s ease-out 0.05s both; }
+#page-inicio .container > *:nth-child(2) { animation: slideUp 0.5s ease-out 0.13s both; }
+#page-inicio .container > *:nth-child(3) { animation: slideUp 0.5s ease-out 0.21s both; }
+#page-inicio .container > *:nth-child(4) { animation: slideUp 0.5s ease-out 0.29s both; }
+
+/* --- Rotas: delay no filtro, cards animam ao ser criados pelo JS --- */
+.rotas-filter-container { animation-delay: 0.05s; }
+
+/* --- Financeiro: stagger entre filtro, cards e barra de total --- */
+.financeiro-filters   { animation-delay: 0.05s; }
+.financeiro-dashboard { animation-delay: 0.15s; }
+.fin-resumo-bar       { animation: slideUp 0.5s ease-out 0.27s both; }
+
+/* --- Config: items em cascata --- */
+#page-config .container > *:nth-child(1) { animation: slideUp 0.5s ease-out 0.05s both; }
+#page-config .container > *:nth-child(2) { animation: slideUp 0.5s ease-out 0.12s both; }
+#page-config .container > *:nth-child(3) { animation: slideUp 0.5s ease-out 0.19s both; }
+#page-config .container > *:nth-child(4) { animation: slideUp 0.5s ease-out 0.26s both; }
+#page-config .container > *:nth-child(5) { animation: slideUp 0.5s ease-out 0.33s both; }
+#page-config .container > *:nth-child(6) { animation: slideUp 0.5s ease-out 0.40s both; }
+
+/* --- Social: seções estáticas em cascata --- */
+#page-social .container > *:nth-child(1) { animation: slideUp 0.5s ease-out 0.05s both; }
+#page-social .container > *:nth-child(2) { animation: slideUp 0.5s ease-out 0.13s both; }
+#page-social .container > *:nth-child(3) { animation: slideUp 0.5s ease-out 0.21s both; }
+
+/* =========================================
    PAGINA SOCIAL
    ========================================= */
 
@@ -1145,6 +1181,7 @@ body.dark-mode .padron-progress-track {
   padding: 14px;
   margin-bottom: 12px;
   border: var(--borda-leve);
+  animation: slideUp 0.4s ease-out both;
 }
 
 .social-amigo-header {
@@ -1275,6 +1312,7 @@ body.dark-mode .padron-progress-track {
   display: flex;
   flex-direction: column;
   gap: 10px;
+  animation: slideUp 0.4s ease-out both;
 }
 
 .social-solicitacao-card .social-amigo-header {
