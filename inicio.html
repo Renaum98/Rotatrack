@@ -319,6 +319,36 @@
     </div>
   </div>
 
+  <!--Pagina Social-->
+  <div id="page-social" class="page">
+    <div class="logo-site">
+      <h2 class="page-inicio_titulo">RotaTrack</h2>
+      <h2>Social</h2>
+    </div>
+
+    <div class="container">
+      <section class="card-inicio">
+        <p class="card-inicio_titulo">Adicionar Amigo</p>
+        <div class="social-add-form">
+          <input type="email" id="inputEmailAmigo" placeholder="email@exemplo.com" autocomplete="off" />
+          <button class="btn-add-amigo" id="btnAdicionarAmigo" title="Adicionar">
+            <span class="material-symbols-outlined">person_add</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="card-inicio" id="cardSolicitacoes" style="display:none">
+        <p class="card-inicio_titulo">Solicitações Recebidas</p>
+        <div id="socialSolicitacoesList"></div>
+      </section>
+
+      <section class="card-inicio">
+        <p class="card-inicio_titulo">Mês Atual (Resumo)</p>
+        <div id="socialAmigosList"></div>
+      </section>
+    </div>
+  </div>
+
   <div class="footer-menu">
     <ul class="footer-menu_list">
       <li class="footer-menu_item">
@@ -334,6 +364,11 @@
       <li class="footer-menu_item">
         <a href="#" class="menu-item_link" data-pagina="financeiro">
           <span class="material-symbols-outlined"> attach_money </span>
+        </a>
+      </li>
+      <li class="footer-menu_item">
+        <a href="#" class="menu-item_link" data-pagina="social">
+          <span class="material-symbols-outlined">group</span>
         </a>
       </li>
       <li class="footer-menu_item">

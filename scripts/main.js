@@ -7,6 +7,7 @@ import {
   atualizarPerfilUsuario,
 } from "./ui.js";
 import { carregarDados, carregarDadosLocal, salvarConfiguracoes } from "./storage.js";
+import { renderizarPaginaSocial, enviarSolicitacao } from "./social.js";
 import { salvarNovaRota } from "./routes.js";
 import { inicializarCalendario } from "./calendar.js";
 import { initPadronizador } from "./padronizador.js";
@@ -301,6 +302,7 @@ function configurarEventListeners() {
         mudarPagina(e, pagina);
         if (pagina === "financeiro") atualizarPaginaFinanceiro();
         if (pagina === "config") atualizarPerfilUsuario();
+        if (pagina === "social") renderizarPaginaSocial();
       }
     });
   });
@@ -387,7 +389,30 @@ function configurarEventListeners() {
     });
   }
 
-  // 6. Modal de confirmação de exclusão
+  // 6. Adicionar amigo (Social)
+  const btnAdicionarAmigo = document.getElementById("btnAdicionarAmigo");
+  const inputEmailAmigo = document.getElementById("inputEmailAmigo");
+
+  if (btnAdicionarAmigo && inputEmailAmigo) {
+    btnAdicionarAmigo.onclick = async () => {
+      const email = inputEmailAmigo.value.trim();
+      if (!email) {
+        mostrarNotificacao("Digite um email.", "warning");
+        return;
+      }
+
+      btnAdicionarAmigo.disabled = true;
+      const resultado = await enviarSolicitacao(email);
+      mostrarNotificacao(resultado.message, resultado.success ? "success" : "warning");
+
+      if (resultado.success) {
+        inputEmailAmigo.value = "";
+      }
+      btnAdicionarAmigo.disabled = false;
+    };
+  }
+
+  // 7. Modal de confirmação de exclusão
   const btnConfirmarExclusao = document.getElementById("btnConfirmarExclusao");
   const btnCancelarExclusao = document.getElementById("btnCancelarExclusao");
   const modalExclusao = document.getElementById("modalConfirmarExclusao");

@@ -1075,3 +1075,262 @@ body.dark-mode .padron-progress-track {
     height: 42px;
   }
 }
+
+/* =========================================
+   PAGINA SOCIAL
+   ========================================= */
+
+.social-add-form {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-top: 4px;
+}
+
+.social-add-form input {
+  flex: 1;
+  padding: 12px;
+  background: var(--cor-input-bg);
+  color: var(--cor-texto);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--radius-pequeno);
+  font-size: 0.9rem;
+  font-family: "Montserrat", sans-serif;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.social-add-form input:focus {
+  border-color: var(--cor-primaria);
+  background: var(--cor-branco);
+}
+
+.social-add-form .btn-add-amigo {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  background: var(--gradiente-principal);
+  color: white;
+  border: none;
+  border-radius: var(--radius-pequeno);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.social-add-form .btn-add-amigo:hover {
+  opacity: 0.9;
+}
+
+.social-add-form .btn-add-amigo:active {
+  transform: scale(0.95);
+}
+
+.social-add-form .btn-add-amigo:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.social-loading {
+  display: flex;
+  justify-content: center;
+  padding: 30px 0;
+}
+
+.social-amigo-card {
+  background: var(--cor-fundo-claro);
+  border-radius: var(--radius-medio);
+  padding: 14px;
+  margin-bottom: 12px;
+  border: var(--borda-leve);
+}
+
+.social-amigo-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 12px;
+}
+
+.social-avatar {
+  width: 44px;
+  height: 44px;
+  background: var(--gradiente-principal);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-weight: 700;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.social-amigo-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.social-amigo-info h4 {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+  margin-bottom: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.social-amigo-info p {
+  font-size: 0.78rem;
+  color: var(--cor-texto-secundario);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.social-btn-remover {
+  flex-shrink: 0;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: var(--cor-texto-terciario);
+  padding: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: color 0.2s, background 0.2s;
+}
+
+.social-btn-remover:hover {
+  color: var(--cor-perigo);
+  background: #fff5f5;
+}
+
+.social-btn-remover .material-symbols-outlined {
+  font-size: 20px;
+}
+
+.social-amigo-stats {
+  display: flex;
+  gap: 8px;
+}
+
+.social-stat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--cor-branco);
+  border-radius: var(--radius-pequeno);
+  padding: 10px 8px;
+  border: var(--borda-leve);
+}
+
+.social-stat .material-symbols-outlined {
+  font-size: 18px;
+  color: var(--cor-primaria);
+  flex-shrink: 0;
+}
+
+.social-stat div {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.social-stat strong {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--cor-texto);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.social-stat span {
+  font-size: 0.68rem;
+  color: var(--cor-texto-terciario);
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+.social-sem-dados {
+  text-align: center;
+  font-size: 0.78rem;
+  color: var(--cor-texto-terciario);
+  margin-top: 10px;
+  font-style: italic;
+}
+
+/* Solicitações de Amizade */
+.social-solicitacao-card {
+  background: var(--cor-fundo-claro);
+  border-radius: var(--radius-medio);
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  border: var(--borda-leve);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.social-solicitacao-card .social-amigo-header {
+  margin-bottom: 0;
+}
+
+.social-solicitacao-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.btn-aceitar-solicitacao,
+.btn-recusar-solicitacao {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  padding: 9px 12px;
+  border-radius: var(--radius-pequeno);
+  border: none;
+  cursor: pointer;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: "Montserrat", sans-serif;
+  transition: opacity 0.2s, transform 0.1s;
+}
+
+.btn-aceitar-solicitacao {
+  background: var(--cor-sucesso);
+  color: #fff;
+}
+
+.btn-recusar-solicitacao {
+  background: var(--cor-branco);
+  color: var(--cor-texto-secundario);
+  border: var(--borda-leve);
+}
+
+.btn-aceitar-solicitacao:hover,
+.btn-recusar-solicitacao:hover {
+  opacity: 0.85;
+}
+
+.btn-aceitar-solicitacao:active,
+.btn-recusar-solicitacao:active {
+  transform: scale(0.97);
+}
+
+.btn-aceitar-solicitacao:disabled,
+.btn-recusar-solicitacao:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.btn-aceitar-solicitacao .material-symbols-outlined,
+.btn-recusar-solicitacao .material-symbols-outlined {
+  font-size: 16px;
+}

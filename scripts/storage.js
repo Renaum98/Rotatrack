@@ -1,6 +1,7 @@
 import { state } from "./state.js";
 import { mostrarNotificacao } from "./utils.js";
 import { atualizarListaRotas } from "./ui.js";
+import { atualizarResumoPublico } from "./social.js";
 
 // ============================================
 // CONFIGURAÇÕES GLOBAIS (FIRESTORE SYNC)
@@ -125,6 +126,7 @@ export function carregarDados() {
           state.rotas = rotasAtualizadas;
           localStorage.setItem("rotas", JSON.stringify(state.rotas));
           atualizarListaRotas();
+          atualizarResumoPublico(rotasAtualizadas);
         },
         (error) => {
           console.error("Erro no listener:", error);
