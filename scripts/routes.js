@@ -142,8 +142,6 @@ export async function salvarNovaRota(event) {
 // EXCLUIR ROTA (Mantido igual)
 // ============================================
 export async function excluirRota(rotaId) {
-  if (!confirm("Tem certeza que deseja excluir esta rota?")) return;
-
   try {
     const user = window.firebaseDb?.auth?.currentUser;
 

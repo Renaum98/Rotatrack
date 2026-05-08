@@ -6,10 +6,12 @@ import {
   atualizarPaginaFinanceiro,
   atualizarPerfilUsuario,
 } from "./ui.js";
-import { carregarDados, carregarDadosLocal } from "./storage.js";
+import { carregarDados, carregarDadosLocal, salvarConfiguracoes } from "./storage.js";
 import { salvarNovaRota } from "./routes.js";
 import { inicializarCalendario } from "./calendar.js";
 import { initPadronizador } from "./padronizador.js";
+let idParaExcluir = null;
+
 // ============================================
 // INICIALIZAÇÃO DO APLICATIVO
 // ============================================
@@ -124,6 +126,7 @@ function configurarEventListeners() {
 
       state.precoGasolina = novoPreco;
       localStorage.setItem("precoGasolina", novoPreco);
+      salvarConfiguracoes({ precoGasolina: novoPreco });
       mostrarNotificacao(`Gasolina: R$ ${novoPreco.toFixed(2)}`, "success");
     });
   }
@@ -142,6 +145,7 @@ function configurarEventListeners() {
 
       state.consumoMedio = novoConsumo;
       localStorage.setItem("consumoMedio", novoConsumo);
+      salvarConfiguracoes({ consumoMedio: novoConsumo });
       mostrarNotificacao(
         `Média ajustada: ${novoConsumo.toFixed(1)} km/l`,
         "success",
@@ -219,15 +223,11 @@ function configurarEventListeners() {
     // --- CASO 3: BOTÃO EXCLUIR (X) ---
     const btnExcluir = e.target.closest(".btn-excluir");
     if (btnExcluir) {
-      const id = btnExcluir.dataset.id;
-      if (confirm("Deseja realmente apagar esta rota?")) {
-        import("./routes.js").then((mod) => {
-          if (mod.excluirRota) {
-            mod.excluirRota(id);
-          } else {
-            console.error("Função excluirRota não encontrada em routes.js");
-          }
-        });
+      idParaExcluir = btnExcluir.dataset.id;
+      const modal = document.getElementById("modalConfirmarExclusao");
+      if (modal) {
+        modal.classList.add("active");
+        modal.style.display = "flex";
       }
       return;
     }
@@ -387,7 +387,45 @@ function configurarEventListeners() {
     });
   }
 
-  // 6. Filtros e Exportação
+  // 6. Modal de confirmação de exclusão
+  const btnConfirmarExclusao = document.getElementById("btnConfirmarExclusao");
+  const btnCancelarExclusao = document.getElementById("btnCancelarExclusao");
+  const modalExclusao = document.getElementById("modalConfirmarExclusao");
+
+  const fecharModalExclusao = () => {
+    if (modalExclusao) {
+      modalExclusao.classList.remove("active");
+      modalExclusao.style.display = "none";
+    }
+    idParaExcluir = null;
+  };
+
+  if (btnConfirmarExclusao) {
+    btnConfirmarExclusao.onclick = () => {
+      if (!idParaExcluir) return;
+      const id = idParaExcluir;
+      fecharModalExclusao();
+      import("./routes.js").then((mod) => {
+        if (mod.excluirRota) {
+          mod.excluirRota(id);
+        } else {
+          console.error("Função excluirRota não encontrada em routes.js");
+        }
+      });
+    };
+  }
+
+  if (btnCancelarExclusao) {
+    btnCancelarExclusao.onclick = fecharModalExclusao;
+  }
+
+  if (modalExclusao) {
+    modalExclusao.onclick = (e) => {
+      if (e.target === modalExclusao) fecharModalExclusao();
+    };
+  }
+
+  // 7. Filtros e Exportação
   configurarFiltrosExtras();
 
   // 7. Logout
@@ -518,6 +556,7 @@ function configurarMetas() {
         mesRef: obterMes(),
       };
       localStorage.setItem("metaMensal", JSON.stringify(state.meta));
+      salvarConfiguracoes({ meta: state.meta });
       import("./ui.js").then((ui) => ui.atualizarGraficoMeta());
     };
 

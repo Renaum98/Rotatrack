@@ -3,6 +3,83 @@ import { mostrarNotificacao } from "./utils.js";
 import { atualizarListaRotas } from "./ui.js";
 
 // ============================================
+// CONFIGURAÇÕES GLOBAIS (FIRESTORE SYNC)
+// ============================================
+export async function carregarConfiguracoes() {
+  const user = window.firebaseDb?.auth?.currentUser;
+  if (!user || !state.db?.db) return;
+
+  try {
+    const doc = await state.db.db
+      .collection("usuarios")
+      .doc(user.uid)
+      .collection("sistema")
+      .doc("configuracoes")
+      .get();
+
+    if (doc.exists) {
+      const data = doc.data();
+
+      if (data.precoGasolina != null) {
+        state.precoGasolina = data.precoGasolina;
+        localStorage.setItem("precoGasolina", data.precoGasolina);
+        const input = document.getElementById("inputPrecoGasolina");
+        if (input) input.value = data.precoGasolina.toFixed(2);
+      }
+
+      if (data.consumoMedio != null) {
+        state.consumoMedio = data.consumoMedio;
+        localStorage.setItem("consumoMedio", data.consumoMedio);
+        const input = document.getElementById("inputConsumoMedio");
+        if (input) input.value = data.consumoMedio.toFixed(1);
+      }
+
+      if (data.meta != null) {
+        const hoje = new Date();
+        const mesAtual = `${hoje.getFullYear()}-${(hoje.getMonth() + 1).toString().padStart(2, "0")}`;
+
+        if (data.meta.mesRef === mesAtual) {
+          state.meta = data.meta;
+          localStorage.setItem("metaMensal", JSON.stringify(data.meta));
+          const inputDiaria = document.getElementById("inputMetaDiaria");
+          const inputDias = document.getElementById("inputMetaDias");
+          if (inputDiaria) inputDiaria.value = data.meta.diaria || "";
+          if (inputDias) inputDias.value = data.meta.dias || "";
+          import("./ui.js").then((ui) => {
+            if (ui.atualizarGraficoMeta) ui.atualizarGraficoMeta();
+          });
+        }
+      }
+    }
+  } catch (error) {
+    console.error("Erro ao carregar configurações:", error);
+  }
+}
+
+export async function salvarConfiguracoes(dados) {
+  const user = window.firebaseDb?.auth?.currentUser;
+  if (!user || !state.db?.db) return;
+
+  try {
+    await state.db.db
+      .collection("usuarios")
+      .doc(user.uid)
+      .collection("sistema")
+      .doc("configuracoes")
+      .set(
+        {
+          ...dados,
+          atualizadoEm:
+            window.firebase.firestore.FieldValue.serverTimestamp(),
+        },
+        { merge: true },
+      );
+  } catch (error) {
+    console.error("Erro ao salvar configuração:", error);
+  }
+}
+
+// ============================================
 // SINCRONIZAÇÃO EM TEMPO REAL (SUBCOLEÇÃO)
 // ============================================
 export function carregarDados() {
@@ -16,6 +93,8 @@ export function carregarDados() {
     carregarDadosLocal();
     return;
   }
+
+  carregarConfiguracoes();
 
   try {
     // --- CORREÇÃO DE HIERARQUIA ---

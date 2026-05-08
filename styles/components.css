@@ -229,6 +229,42 @@
   color: #ffffff;
 }
 
+/* Modal de Confirmação */
+.modal-content--sm {
+  max-width: 340px;
+  text-align: center;
+}
+
+.modal-confirm-icon {
+  width: 56px;
+  height: 56px;
+  background: #fff5f5;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  color: var(--cor-perigo);
+}
+
+.modal-confirm-icon .material-symbols-outlined {
+  font-size: 28px;
+}
+
+.modal-confirm-titulo {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--cor-texto);
+  margin-bottom: 8px;
+}
+
+.modal-confirm-texto {
+  font-size: 0.9rem;
+  color: var(--cor-texto-secundario);
+  line-height: 1.5;
+  margin-bottom: 4px;
+}
+
 /* Empty State */
 .empty-state {
   text-align: center;
