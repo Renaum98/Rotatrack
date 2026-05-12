@@ -428,7 +428,6 @@
   flex-direction: row;
   align-items: flex-end;
   gap: 12px;
-  animation: slideRight 0.6s ease-out;
 }
 
 .filter-wrapper {
@@ -854,7 +853,6 @@ body.dark-mode .padron-progress-track {
   border: var(--borda-leve);
   /* Garante que os filhos estiquem 100% da largura */
   align-items: stretch;
-  animation: slideRight 0.6s ease-out;
 }
 
 /* Grupo de Filtro Genérico */
@@ -933,7 +931,6 @@ body.dark-mode .padron-progress-track {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 12px;
-  animation: slideUp 0.6s ease-out;
 }
 
 /* Card Genérico */
@@ -1092,12 +1089,12 @@ body.dark-mode .padron-progress-track {
 #page-inicio .container > *:nth-child(4) { animation: slideUp 0.5s ease-out 0.29s both; }
 
 /* --- Rotas: delay no filtro, cards animam ao ser criados pelo JS --- */
-.rotas-filter-container { animation-delay: 0.05s; }
+.rotas-filter-container { animation: slideUp 0.5s ease-out 0.05s both; }
 
 /* --- Financeiro: stagger entre filtro, cards e barra de total --- */
-.financeiro-filters   { animation-delay: 0.05s; }
-.financeiro-dashboard { animation-delay: 0.15s; }
-.fin-resumo-bar       { animation: slideUp 0.5s ease-out 0.27s both; }
+.financeiro-filters   { animation: slideUp 0.5s ease-out 0.05s both; }
+.financeiro-dashboard { animation: slideUp 0.5s ease-out 0.13s both; }
+.fin-resumo-bar       { animation: slideUp 0.5s ease-out 0.21s both; }
 
 /* --- Config: items em cascata --- */
 #page-config .container > *:nth-child(1) { animation: slideUp 0.5s ease-out 0.05s both; }
