@@ -1,4 +1,4 @@
-const CACHE_NAME = "rotatrack-v4.4";
+const CACHE_NAME = "rotatrack-v4.5";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -21,6 +21,14 @@ const urlsToCache = [
   "./scripts/padronizador.js",
   "./assets/rota_logo-192.png",
   "./assets/rota_logo-512.png",
+];
+
+// Hosts de CDNs externas que devem ser cacheadas (offline-friendly)
+const CDN_HOSTS = [
+  "fonts.googleapis.com",
+  "fonts.gstatic.com",
+  "cdn.jsdelivr.net",
+  "www.gstatic.com",
 ];
 
 // 1. INSTALAÇÃO
@@ -47,38 +55,64 @@ self.addEventListener("activate", (event) => {
       );
     }),
   );
-  // ASSUME O CONTROLE IMEDIATAMENTE: Faz a nova versão valer na mesma hora
   return self.clients.claim();
 });
 
-// 3. INTERCEPTAR PEDIDOS (ESTRATÉGIA: REDE PRIMEIRO, CACHE DEPOIS)
+// 3. ESTRATÉGIAS:
+//    - HTML/navegação: network-first (pega versão nova; cai pro cache offline)
+//    - Estáticos locais e CDNs (CSS/JS/fontes/imagens): stale-while-revalidate
+//    - Firebase/Firestore: passa direto (não intercepta)
 self.addEventListener("fetch", (event) => {
-  // Ignora requisições do Firebase/Google
+  const req = event.request;
+  const url = new URL(req.url);
+
+  // Ignora não-GET e Firestore/Firebase APIs dinâmicas
+  if (req.method !== "GET") return;
   if (
-    event.request.url.includes("firestore") ||
-    event.request.url.includes("googleapis")
+    url.hostname.includes("firestore") ||
+    url.hostname.includes("googleapis.com") && !url.hostname.includes("fonts.googleapis.com")
   ) {
     return;
   }
 
-  // Ignora requisições que não sejam GET (como POST do Firebase Auth, etc)
-  if (event.request.method !== "GET") {
+  const isHTML =
+    req.mode === "navigate" ||
+    req.destination === "document" ||
+    (req.headers.get("accept") || "").includes("text/html");
+
+  if (isHTML) {
+    event.respondWith(networkFirst(req));
     return;
   }
 
-  event.respondWith(
-    // 1º TENTA PEGAR DA INTERNET (Para ter a versão mais atualizada que você commitou)
-    fetch(event.request)
-      .then((networkResponse) => {
-        // Se deu certo, atualiza o cache "silenciosamente" com o arquivo novo
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, networkResponse.clone());
-          return networkResponse;
-        });
-      })
-      .catch(() => {
-        // 2º SE ESTIVER OFFLINE, PEGA DO CACHE (Para o PWA continuar funcionando sem internet)
-        return caches.match(event.request);
-      }),
-  );
+  const isLocal = url.origin === self.location.origin;
+  const isCDN = CDN_HOSTS.some((h) => url.hostname.endsWith(h));
+
+  if (isLocal || isCDN) {
+    event.respondWith(staleWhileRevalidate(req));
+  }
 });
+
+function networkFirst(req) {
+  return fetch(req)
+    .then((res) => {
+      const copy = res.clone();
+      caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+      return res;
+    })
+    .catch(() => caches.match(req).then((r) => r || caches.match("./inicio.html")));
+}
+
+function staleWhileRevalidate(req) {
+  return caches.open(CACHE_NAME).then((cache) =>
+    cache.match(req).then((cached) => {
+      const fetchPromise = fetch(req)
+        .then((res) => {
+          if (res && res.status === 200) cache.put(req, res.clone());
+          return res;
+        })
+        .catch(() => cached);
+      return cached || fetchPromise;
+    }),
+  );
+}

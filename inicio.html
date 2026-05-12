@@ -69,6 +69,10 @@
           document.body.style.display = "block";
         }
       });
+
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker.register("./sw.js").catch(console.error);
+      }
     });
   </script>
 </head>

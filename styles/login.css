@@ -2,6 +2,8 @@
 
 .login-page {
     min-height: 100vh;
+    min-height: -webkit-fill-available;
+    min-height: 100dvh;
     display: flex;
     flex-direction: column;
     background: var(--cor-background);

@@ -8,7 +8,7 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: var(--espacamento-pequeno) var(--espacamento-medio);
-  padding-bottom: 60px;
+  padding-bottom: calc(60px + env(safe-area-inset-bottom));
 }
 
 .logo-site {
@@ -45,7 +45,7 @@ body {
   margin: auto;
   position: fixed;
   width: 360px;
-  bottom: 20px;
+  bottom: calc(20px + env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   padding: 0 var(--espacamento-pequeno);
