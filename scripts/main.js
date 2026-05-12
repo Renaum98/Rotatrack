@@ -38,6 +38,40 @@ function inicializarApp() {
 
   // Inicializa Tema (Dark/Light) se existir a função
   inicializarTema();
+
+  configurarPromptInstalacao();
+}
+
+function configurarPromptInstalacao() {
+  const card = document.getElementById("cardInstalarApp");
+  const btn = document.getElementById("btnInstalarApp");
+  if (!card || !btn) return;
+
+  const isStandalone =
+    window.matchMedia("(display-mode: standalone)").matches ||
+    window.navigator.standalone === true;
+  if (isStandalone) return;
+
+  let deferredPrompt = null;
+
+  window.addEventListener("beforeinstallprompt", (e) => {
+    e.preventDefault();
+    deferredPrompt = e;
+    card.style.display = "block";
+  });
+
+  btn.addEventListener("click", async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    deferredPrompt = null;
+    if (outcome === "accepted") card.style.display = "none";
+  });
+
+  window.addEventListener("appinstalled", () => {
+    card.style.display = "none";
+    deferredPrompt = null;
+  });
 }
 
 function inicializarModoOffline() {
@@ -45,6 +79,7 @@ function inicializarModoOffline() {
   carregarDadosLocal();
   inicializarTema();
   initPadronizador();
+  configurarPromptInstalacao();
 }
 
 // ============================================

@@ -75,7 +75,25 @@
 
       // 1. Configuração do PWA
       if ("serviceWorker" in navigator) {
-        navigator.serviceWorker.register("./sw.js").catch(console.error);
+        navigator.serviceWorker.register("./sw.js").then((reg) => {
+          reg.addEventListener("updatefound", () => {
+            const sw = reg.installing;
+            if (!sw) return;
+            sw.addEventListener("statechange", () => {
+              if (sw.state === "installed" && navigator.serviceWorker.controller) {
+                window.__rotatrackHasUpdate = true;
+              }
+            });
+          });
+          setInterval(() => reg.update().catch(() => { }), 60 * 60 * 1000);
+        }).catch(console.error);
+
+        let refreshing = false;
+        navigator.serviceWorker.addEventListener("controllerchange", () => {
+          if (refreshing) return;
+          refreshing = true;
+          if (window.__rotatrackHasUpdate) window.location.reload();
+        });
       }
 
       // 2. Redirecionamento Automático Seguro
