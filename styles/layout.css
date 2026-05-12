@@ -8,7 +8,7 @@ body {
   max-width: 600px;
   margin: 0 auto;
   padding: var(--espacamento-pequeno) var(--espacamento-medio);
-  padding-bottom: calc(60px + env(safe-area-inset-bottom));
+  padding-bottom: max(60px, calc(60px + env(safe-area-inset-bottom) - 20px));
 }
 
 .logo-site {
@@ -45,7 +45,7 @@ body {
   margin: auto;
   position: fixed;
   width: 360px;
-  bottom: calc(20px + env(safe-area-inset-bottom));
+  bottom: max(20px, env(safe-area-inset-bottom));
   left: 0;
   right: 0;
   padding: 0 var(--espacamento-pequeno);
@@ -54,6 +54,8 @@ body {
   z-index: 1000;
   border-radius: 30px;
   border: var(--borda-leve);
+  will-change: transform;
+  transform: translateZ(0);
 }
 
 .footer-menu_list {
