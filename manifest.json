@@ -1,12 +1,18 @@
 {
+  "id": "/rotatrack/",
   "name": "RotaTrack",
   "short_name": "RotaTrack",
+  "description": "Sistema de gerenciamento de rotas para entregadores",
+  "lang": "pt-BR",
+  "dir": "ltr",
   "start_url": "./inicio.html",
   "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
   "background_color": "#667eea",
   "theme_color": "#667eea",
   "orientation": "portrait",
+  "categories": ["productivity", "business", "utilities"],
   "icons": [
     {
       "src": "assets/rota_logo-192.png",
