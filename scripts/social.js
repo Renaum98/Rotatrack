@@ -1,5 +1,7 @@
 import { state } from "./state.js";
-import { mostrarNotificacao } from "./utils.js";
+import { mostrarNotificacao, escapeHtml, criarLogger } from "./utils.js";
+
+const log = criarLogger("social");
 
 // ============================================
 // RESUMO PÚBLICO
@@ -32,7 +34,7 @@ export async function atualizarResumoPublico(todasRotas) {
       .collection("sistema").doc("resumoPublico")
       .set(resumo);
   } catch (e) {
-    console.error("Erro ao atualizar resumo público:", e);
+    log.error("Erro ao atualizar resumo público", e);
   }
 }
 
@@ -51,18 +53,24 @@ async function buscarUsuarioPorEmail(email) {
     const doc = snap.docs[0];
     return { uid: doc.id, nome: doc.data().nome || email, email: doc.data().email };
   } catch (e) {
-    console.error("Erro ao buscar usuário:", e);
+    log.error("Erro ao buscar usuário", e);
     return null;
   }
 }
 
 export async function removerAmigo(amigoUid) {
   const user = window.firebaseDb?.auth?.currentUser;
-  if (!user || !state.db?.db) return;
-  await state.db.db
-    .collection("usuarios").doc(user.uid)
-    .collection("amigos").doc(amigoUid)
-    .delete();
+  if (!user || !state.db?.db) return false;
+  try {
+    await state.db.db
+      .collection("usuarios").doc(user.uid)
+      .collection("amigos").doc(amigoUid)
+      .delete();
+    return true;
+  } catch (e) {
+    log.error("Erro ao remover amigo", e);
+    return false;
+  }
 }
 
 export async function carregarAmigos() {
@@ -74,7 +82,7 @@ export async function carregarAmigos() {
       .collection("amigos").get();
     return snap.docs.map((doc) => doc.data());
   } catch (e) {
-    console.error("Erro ao carregar amigos:", e);
+    log.error("Erro ao carregar amigos", e);
     return [];
   }
 }
@@ -88,7 +96,7 @@ async function carregarResumoAmigo(amigoUid) {
       .get();
     return doc.exists ? doc.data() : null;
   } catch (e) {
-    console.error("Erro ao carregar resumo do amigo:", e);
+    log.error("Erro ao carregar resumo do amigo", e);
     return null;
   }
 }
@@ -100,52 +108,61 @@ export async function enviarSolicitacao(email) {
   const user = window.firebaseDb?.auth?.currentUser;
   if (!user || !state.db?.db) return { success: false, message: "Não autenticado." };
 
-  const normalizado = email.toLowerCase().trim();
+  // Valida formato de email antes de bater no Firestore
+  const normalizado = String(email || "").toLowerCase().trim();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizado)) {
+    return { success: false, message: "Email inválido." };
+  }
 
   if (normalizado === user.email.toLowerCase()) {
     return { success: false, message: "Você não pode adicionar a si mesmo." };
   }
 
-  const destinatario = await buscarUsuarioPorEmail(normalizado);
-  if (!destinatario) {
-    return { success: false, message: "Nenhum usuário cadastrado com este email." };
+  try {
+    const destinatario = await buscarUsuarioPorEmail(normalizado);
+    if (!destinatario) {
+      return { success: false, message: "Nenhum usuário cadastrado com este email." };
+    }
+
+    const amigoDoc = await state.db.db
+      .collection("usuarios").doc(user.uid)
+      .collection("amigos").doc(destinatario.uid).get();
+    if (amigoDoc.exists) {
+      return { success: false, message: `${destinatario.nome} já é seu amigo.` };
+    }
+
+    const jaEnviou = await state.db.db
+      .collection("usuarios").doc(destinatario.uid)
+      .collection("solicitacoes").doc(user.uid).get();
+    if (jaEnviou.exists) {
+      return { success: false, message: "Solicitação já enviada. Aguarde a resposta." };
+    }
+
+    const reversa = await state.db.db
+      .collection("usuarios").doc(user.uid)
+      .collection("solicitacoes").doc(destinatario.uid).get();
+    if (reversa.exists) {
+      return { success: false, message: `${destinatario.nome} já te enviou uma solicitação. Aceite abaixo.` };
+    }
+
+    await state.db.db
+      .collection("usuarios").doc(destinatario.uid)
+      .collection("solicitacoes").doc(user.uid)
+      .set({
+        de: {
+          uid: user.uid,
+          nome: user.displayName || user.email.split("@")[0],
+          email: user.email,
+        },
+        status: "pendente",
+        criadoEm: window.firebase.firestore.FieldValue.serverTimestamp(),
+      });
+
+    return { success: true, message: `Solicitação enviada para ${destinatario.nome}!` };
+  } catch (e) {
+    log.error("Erro ao enviar solicitação", e);
+    return { success: false, message: "Erro de conexão. Tente novamente." };
   }
-
-  const amigoDoc = await state.db.db
-    .collection("usuarios").doc(user.uid)
-    .collection("amigos").doc(destinatario.uid).get();
-  if (amigoDoc.exists) {
-    return { success: false, message: `${destinatario.nome} já é seu amigo.` };
-  }
-
-  const jaEnviou = await state.db.db
-    .collection("usuarios").doc(destinatario.uid)
-    .collection("solicitacoes").doc(user.uid).get();
-  if (jaEnviou.exists) {
-    return { success: false, message: "Solicitação já enviada. Aguarde a resposta." };
-  }
-
-  const reversa = await state.db.db
-    .collection("usuarios").doc(user.uid)
-    .collection("solicitacoes").doc(destinatario.uid).get();
-  if (reversa.exists) {
-    return { success: false, message: `${destinatario.nome} já te enviou uma solicitação. Aceite abaixo.` };
-  }
-
-  await state.db.db
-    .collection("usuarios").doc(destinatario.uid)
-    .collection("solicitacoes").doc(user.uid)
-    .set({
-      de: {
-        uid: user.uid,
-        nome: user.displayName || user.email.split("@")[0],
-        email: user.email,
-      },
-      status: "pendente",
-      criadoEm: window.firebase.firestore.FieldValue.serverTimestamp(),
-    });
-
-  return { success: true, message: `Solicitação enviada para ${destinatario.nome}!` };
 }
 
 async function carregarSolicitacoesPendentes() {
@@ -159,47 +176,57 @@ async function carregarSolicitacoesPendentes() {
       .get();
     return snap.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
   } catch (e) {
-    console.error("Erro ao carregar solicitações:", e);
+    log.error("Erro ao carregar solicitações", e);
     return [];
   }
 }
 
 async function aceitarSolicitacao(solicitacao) {
   const user = window.firebaseDb?.auth?.currentUser;
-  if (!user || !state.db?.db) return;
+  if (!user || !state.db?.db) return false;
 
-  const myDoc = await state.db.db.collection("usuarios").doc(user.uid).get();
-  const myNome = myDoc.data()?.nome || user.displayName || user.email.split("@")[0];
-  const ts = window.firebase.firestore.FieldValue.serverTimestamp();
-  const batch = state.db.db.batch();
+  try {
+    const myDoc = await state.db.db.collection("usuarios").doc(user.uid).get();
+    const myNome = myDoc.data()?.nome || user.displayName || user.email.split("@")[0];
+    const ts = window.firebase.firestore.FieldValue.serverTimestamp();
+    const batch = state.db.db.batch();
 
-  // Adiciona o remetente na minha lista de amigos
-  batch.set(
-    state.db.db.collection("usuarios").doc(user.uid).collection("amigos").doc(solicitacao.de.uid),
-    { uid: solicitacao.de.uid, nome: solicitacao.de.nome, email: solicitacao.de.email, adicionadoEm: ts },
-  );
+    batch.set(
+      state.db.db.collection("usuarios").doc(user.uid).collection("amigos").doc(solicitacao.de.uid),
+      { uid: solicitacao.de.uid, nome: solicitacao.de.nome, email: solicitacao.de.email, adicionadoEm: ts },
+    );
 
-  // Adiciona eu na lista de amigos do remetente (cross-write permitido pela regra Firestore)
-  batch.set(
-    state.db.db.collection("usuarios").doc(solicitacao.de.uid).collection("amigos").doc(user.uid),
-    { uid: user.uid, nome: myNome, email: user.email, adicionadoEm: ts },
-  );
+    // Cross-write na lista do remetente (deve ser permitido pelas regras do Firestore)
+    batch.set(
+      state.db.db.collection("usuarios").doc(solicitacao.de.uid).collection("amigos").doc(user.uid),
+      { uid: user.uid, nome: myNome, email: user.email, adicionadoEm: ts },
+    );
 
-  // Remove a solicitação
-  batch.delete(
-    state.db.db.collection("usuarios").doc(user.uid).collection("solicitacoes").doc(solicitacao.de.uid),
-  );
+    batch.delete(
+      state.db.db.collection("usuarios").doc(user.uid).collection("solicitacoes").doc(solicitacao.de.uid),
+    );
 
-  await batch.commit();
+    await batch.commit();
+    return true;
+  } catch (e) {
+    log.error("Erro ao aceitar solicitação", e);
+    return false;
+  }
 }
 
 async function recusarSolicitacao(solicitacaoId) {
   const user = window.firebaseDb?.auth?.currentUser;
-  if (!user || !state.db?.db) return;
-  await state.db.db
-    .collection("usuarios").doc(user.uid)
-    .collection("solicitacoes").doc(solicitacaoId)
-    .delete();
+  if (!user || !state.db?.db) return false;
+  try {
+    await state.db.db
+      .collection("usuarios").doc(user.uid)
+      .collection("solicitacoes").doc(solicitacaoId)
+      .delete();
+    return true;
+  } catch (e) {
+    log.error("Erro ao recusar solicitação", e);
+    return false;
+  }
 }
 
 // ============================================
@@ -220,22 +247,23 @@ async function renderizarSolicitacoes() {
   card.style.display = "block";
   container.innerHTML = solicitacoes
     .map((s) => {
-      const inicial = (s.de.nome || s.de.email)[0].toUpperCase();
+      const nome = s.de.nome || s.de.email || "";
+      const inicial = escapeHtml((nome[0] || "?").toUpperCase());
       return `
         <div class="social-solicitacao-card">
           <div class="social-amigo-header">
             <div class="social-avatar">${inicial}</div>
             <div class="social-amigo-info">
-              <h4>${s.de.nome}</h4>
-              <p>${s.de.email}</p>
+              <h4>${escapeHtml(s.de.nome)}</h4>
+              <p>${escapeHtml(s.de.email)}</p>
             </div>
           </div>
           <div class="social-solicitacao-actions">
-            <button class="btn-aceitar-solicitacao" data-uid="${s.de.uid}">
+            <button class="btn-aceitar-solicitacao" data-uid="${escapeHtml(s.de.uid)}">
               <span class="material-symbols-outlined">check</span>
               Aceitar
             </button>
-            <button class="btn-recusar-solicitacao" data-uid="${s.de.uid}">
+            <button class="btn-recusar-solicitacao" data-uid="${escapeHtml(s.de.uid)}">
               <span class="material-symbols-outlined">close</span>
               Recusar
             </button>
@@ -248,9 +276,14 @@ async function renderizarSolicitacoes() {
     btn.onclick = async () => {
       const s = solicitacoes.find((x) => x.de.uid === btn.dataset.uid);
       btn.disabled = true;
-      await aceitarSolicitacao(s);
-      mostrarNotificacao(`${s.de.nome} agora é seu amigo!`, "success");
-      renderizarPaginaSocial();
+      const ok = await aceitarSolicitacao(s);
+      if (ok) {
+        mostrarNotificacao(`${s.de.nome} agora é seu amigo!`, "success");
+        renderizarPaginaSocial();
+      } else {
+        mostrarNotificacao("Erro ao aceitar. Tente novamente.", "error");
+        btn.disabled = false;
+      }
     };
   });
 
@@ -258,9 +291,14 @@ async function renderizarSolicitacoes() {
     btn.onclick = async () => {
       const s = solicitacoes.find((x) => x.de.uid === btn.dataset.uid);
       btn.disabled = true;
-      await recusarSolicitacao(s.de.uid);
-      mostrarNotificacao("Solicitação recusada.", "success");
-      renderizarSolicitacoes();
+      const ok = await recusarSolicitacao(s.de.uid);
+      if (ok) {
+        mostrarNotificacao("Solicitação recusada.", "success");
+        renderizarSolicitacoes();
+      } else {
+        mostrarNotificacao("Erro ao recusar. Tente novamente.", "error");
+        btn.disabled = false;
+      }
     };
   });
 }
@@ -292,19 +330,20 @@ export async function renderizarPaginaSocial() {
     .map((amigo, i) => {
       const resumo = resumos[i];
       const mesAtivo = resumo?.mesRef === mesRef;
-      const totalRotas = mesAtivo ? resumo.totalRotas ?? 0 : 0;
-      const totalKm = mesAtivo ? (resumo.totalKm ?? 0).toFixed(1) : "0.0";
-      const inicial = (amigo.nome || amigo.email)[0].toUpperCase();
+      const totalRotas = mesAtivo ? Number(resumo.totalRotas ?? 0) : 0;
+      const totalKm = mesAtivo ? Number(resumo.totalKm ?? 0).toFixed(1) : "0.0";
+      const nomeBase = amigo.nome || amigo.email || "";
+      const inicial = escapeHtml((nomeBase[0] || "?").toUpperCase());
 
       return `
         <div class="social-amigo-card">
           <div class="social-amigo-header">
             <div class="social-avatar">${inicial}</div>
             <div class="social-amigo-info">
-              <h4>${amigo.nome}</h4>
-              <p>${amigo.email}</p>
+              <h4>${escapeHtml(amigo.nome)}</h4>
+              <p>${escapeHtml(amigo.email)}</p>
             </div>
-            <button class="social-btn-remover" data-uid="${amigo.uid}" title="Remover amigo">
+            <button class="social-btn-remover" data-uid="${escapeHtml(amigo.uid)}" title="Remover amigo">
               <span class="material-symbols-outlined">person_remove</span>
             </button>
           </div>
@@ -331,9 +370,15 @@ export async function renderizarPaginaSocial() {
 
   container.querySelectorAll(".social-btn-remover").forEach((btn) => {
     btn.onclick = async () => {
-      await removerAmigo(btn.dataset.uid);
-      mostrarNotificacao("Amigo removido.", "success");
-      renderizarPaginaSocial();
+      btn.disabled = true;
+      const ok = await removerAmigo(btn.dataset.uid);
+      if (ok) {
+        mostrarNotificacao("Amigo removido.", "success");
+        renderizarPaginaSocial();
+      } else {
+        mostrarNotificacao("Erro ao remover. Tente novamente.", "error");
+        btn.disabled = false;
+      }
     };
   });
 }

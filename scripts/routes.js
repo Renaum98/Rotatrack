@@ -1,7 +1,21 @@
 import { state } from "./state.js";
-import { mostrarNotificacao, fecharModal } from "./utils.js";
+import {
+  mostrarNotificacao,
+  fecharModal,
+  formatarDataLocal,
+  parseDataLocal,
+} from "./utils.js";
 import { salvarRotaFinalizada } from "./storage.js";
 import { renderizarCalendario } from "./calendar.js";
+import {
+  PRECO_GASOLINA_PADRAO,
+  CONSUMO_MEDIO_PADRAO,
+  KM_MAX_POR_ROTA,
+  VALOR_MAX_POR_ROTA,
+  PLATAFORMA_MAX_CHARS,
+  NOME_MOTORISTA_MAX_CHARS,
+  DURACAO_ROTA_PADRAO_MIN,
+} from "./constants.js";
 
 // ============================================
 // SALVAR NOVA ROTA (ADAPTADO AO SEU HTML)
@@ -32,45 +46,53 @@ export async function salvarNovaRota(event) {
     }
 
     // 3. Conversão de Valores
-    const plataforma = elPlataforma.value;
-    const kmPercorridos = parseFloat(elKm.value.replace(",", ".")) || 0;
-    const consumoVeiculo = state.consumoMedio || 10;
-    const valorTotal = parseFloat(elValor.value.replace(",", ".")) || 0;
+    const plataforma = String(elPlataforma.value || "").trim().slice(0, PLATAFORMA_MAX_CHARS);
+    const kmPercorridos = parseFloat(String(elKm.value).replace(",", "."));
+    const consumoVeiculo = state.consumoMedio || CONSUMO_MEDIO_PADRAO;
+    const valorTotal = parseFloat(String(elValor.value).replace(",", "."));
 
     // Pega o motorista ou define um padrão se der erro
     const motoristaSelecionado = elMotorista
-      ? elMotorista.value
+      ? String(elMotorista.value || "").trim().slice(0, NOME_MOTORISTA_MAX_CHARS) || "Motorista 1"
       : "Motorista 1";
 
-    // Validação de valores zerados
-    if (kmPercorridos === 0 || valorTotal === 0) {
-      throw new Error("Preencha o KM e o Valor corretamente.");
+    // Validação de valores (NaN, negativos, zerados e fora de bounds plausíveis)
+    if (!plataforma) {
+      throw new Error("Selecione a plataforma.");
+    }
+    if (!Number.isFinite(kmPercorridos) || kmPercorridos <= 0 || kmPercorridos > KM_MAX_POR_ROTA) {
+      throw new Error(`KM inválido. Informe um valor entre 0 e ${KM_MAX_POR_ROTA}.`);
+    }
+    if (!Number.isFinite(valorTotal) || valorTotal <= 0 || valorTotal > VALOR_MAX_POR_ROTA) {
+      throw new Error(`Valor inválido. Informe um valor entre 0 e ${VALOR_MAX_POR_ROTA}.`);
     }
 
     // 4. Cálculos Financeiros
-    const precoGasolina = state.precoGasolina || 6.35;
+    const precoGasolina = state.precoGasolina || PRECO_GASOLINA_PADRAO;
     const litrosGastos = kmPercorridos / consumoVeiculo;
     const custoGasolina = litrosGastos * precoGasolina;
     const lucroLiquido = valorTotal - custoGasolina;
 
-    // 5. Tratamento de Data
+    // 5. Tratamento de Data — valida formato YYYY-MM-DD e descarta datas futuras
     let dataReferencia = new Date();
     if (elData && elData.value) {
-      const partes = elData.value.split("-");
-      // O input date retorna YYYY-MM-DD. O Date() usa mês 0-11.
-      const ano = parseInt(partes[0]);
-      const mes = parseInt(partes[1]) - 1;
-      const dia = parseInt(partes[2]);
-      dataReferencia.setFullYear(ano);
-      dataReferencia.setMonth(mes);
-      dataReferencia.setDate(dia);
+      const candidata = parseDataLocal(elData.value);
+      if (!candidata) {
+        throw new Error("Data inválida.");
+      }
+      // Bloqueia datas futuras (defesa em profundidade além do input.max)
+      const hoje = new Date();
+      hoje.setHours(23, 59, 59, 999);
+      if (candidata > hoje) {
+        throw new Error("Não é possível registrar rotas com data futura.");
+      }
+      dataReferencia = candidata;
     }
 
-    // Ajuste de horário para não virar o dia por fuso horário
+    // Cria intervalo "lógico" de DURACAO_ROTA_PADRAO_MIN minutos entre início e fim
     const dataFim = new Date(dataReferencia);
     const dataInicio = new Date(dataReferencia);
-    // Subtrai 30 min só para ter um intervalo lógico, opcional
-    dataInicio.setMinutes(dataInicio.getMinutes() - 30);
+    dataInicio.setMinutes(dataInicio.getMinutes() - DURACAO_ROTA_PADRAO_MIN);
 
     // 6. Verificação de Edição (Se o form tiver um ID, é edição)
     // Se não tiver ID no form, cria um novo ID baseado no tempo
@@ -109,11 +131,7 @@ export async function salvarNovaRota(event) {
 
     // Resetar data para hoje no input (UX)
     if (elData) {
-      const hoje = new Date();
-      const ano = hoje.getFullYear();
-      const mes = String(hoje.getMonth() + 1).padStart(2, "0");
-      const dia = String(hoje.getDate()).padStart(2, "0");
-      elData.value = `${ano}-${mes}-${dia}`;
+      elData.value = formatarDataLocal(new Date());
     }
 
     // Resetar botão submit (texto)

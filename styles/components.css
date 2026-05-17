@@ -379,3 +379,35 @@ input:checked+.slider {
 input:checked+.slider:before {
   transform: translateX(22px);
 }
+
+/* ============================================
+   NOTIFICAÇÕES (toast) — antes inline em utils.js
+   ============================================ */
+@keyframes notif-slide-in {
+  from { transform: translateX(400px); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+@keyframes notif-slide-out {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(400px); opacity: 0; }
+}
+
+.notificacao {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  color: #fff;
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 9999;
+  font-family: "Montserrat", sans-serif;
+  font-weight: 500;
+  max-width: 300px;
+  animation: notif-slide-in 0.3s ease;
+}
+.notificacao.is-closing { animation: notif-slide-out 0.3s ease forwards; }
+.notificacao-success { background: #10b981; }
+.notificacao-error   { background: #ef4444; }
+.notificacao-warning { background: #f59e0b; }
+.notificacao-info    { background: #667eea; }

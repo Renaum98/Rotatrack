@@ -1,29 +1,38 @@
 import { state } from "./state.js";
 
 let dataAtualCalendario = new Date();
+// Permite cancelar os listeners do calendário se inicializar for chamado de novo
+let calendarioListenersAbort = null;
 
 export function inicializarCalendario() {
   renderizarCalendario();
 
   const btnPrev = document.getElementById("btnPrevMonth");
   const btnNext = document.getElementById("btnNextMonth");
+  if (!btnPrev || !btnNext) return;
 
-  if (btnPrev && btnNext) {
-    const newPrev = btnPrev.cloneNode(true);
-    const newNext = btnNext.cloneNode(true);
-    btnPrev.parentNode.replaceChild(newPrev, btnPrev);
-    btnNext.parentNode.replaceChild(newNext, btnNext);
+  // Cancela listeners anteriores (se inicializarCalendario for chamado mais de uma vez)
+  if (calendarioListenersAbort) calendarioListenersAbort.abort();
+  calendarioListenersAbort = new AbortController();
+  const { signal } = calendarioListenersAbort;
 
-    newPrev.addEventListener("click", () => {
+  btnPrev.addEventListener(
+    "click",
+    () => {
       dataAtualCalendario.setMonth(dataAtualCalendario.getMonth() - 1);
       renderizarCalendario();
-    });
+    },
+    { signal },
+  );
 
-    newNext.addEventListener("click", () => {
+  btnNext.addEventListener(
+    "click",
+    () => {
       dataAtualCalendario.setMonth(dataAtualCalendario.getMonth() + 1);
       renderizarCalendario();
-    });
-  }
+    },
+    { signal },
+  );
 }
 
 export function renderizarCalendario() {
@@ -72,36 +81,39 @@ export function renderizarCalendario() {
       });
   }
 
-  // 1. Renderiza os espaços vazios (agora calculados para Segunda)
+  // Monta tudo num fragmento, depois insere de uma vez no grid (1 reflow só)
+  const frag = document.createDocumentFragment();
+
+  // 1. Espaços vazios (até o primeiro dia do mês — começo na segunda)
   for (let i = 0; i < espacosVazios; i++) {
     const vazio = document.createElement("div");
     vazio.classList.add("calendar-day", "faded");
-    grid.appendChild(vazio);
+    frag.appendChild(vazio);
   }
 
   // 2. Dias do Mês
   for (let dia = 1; dia <= diasNoMes; dia++) {
     const elDia = document.createElement("div");
     elDia.classList.add("calendar-day");
-    
-    // Verifica se é hoje
+
     if (dia === hoje.getDate() && mes === hoje.getMonth() && ano === hoje.getFullYear()) {
-        elDia.classList.add("today");
+      elDia.classList.add("today");
     }
 
     const spanNumero = document.createElement("span");
     spanNumero.textContent = dia;
     elDia.appendChild(spanNumero);
 
-    // Bolinha de rotas
     const chaveDia = `${ano}-${mes}-${dia}`;
     if (rotasPorDia[chaveDia]) {
-        const badge = document.createElement("div");
-        badge.classList.add("day-badge");
-        badge.textContent = rotasPorDia[chaveDia];
-        elDia.appendChild(badge);
+      const badge = document.createElement("div");
+      badge.classList.add("day-badge");
+      badge.textContent = rotasPorDia[chaveDia];
+      elDia.appendChild(badge);
     }
 
-    grid.appendChild(elDia);
+    frag.appendChild(elDia);
   }
+
+  grid.appendChild(frag);
 }

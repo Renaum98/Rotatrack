@@ -218,13 +218,13 @@
     </div>
   </div>
 
-  <div class="modal" id="modalRegistrarRota">
+  <div class="modal" id="modalRegistrarRota" role="dialog" aria-modal="true" aria-labelledby="tituloModalRegistrarRota" aria-hidden="true">
     <div class="modal-content">
-      <h3>Nova Rota</h3>
+      <h3 id="tituloModalRegistrarRota">Nova Rota</h3>
       <form id="formRegistrarRota">
 
         <div class="form-group">
-          <label>Quem dirigiu?</label>
+          <label for="selectMotoristaRota">Quem dirigiu?</label>
           <select id="selectMotoristaRota">
             <option value="Motorista 1">Motorista 1</option>
             <option value="Motorista 2">Motorista 2</option>
@@ -232,13 +232,13 @@
         </div>
 
         <div class="form-group">
-          <label>Data da Rota</label>
+          <label for="inputDataRota">Data da Rota</label>
           <input type="date" id="inputDataRota"
             style="width: 100%; padding: 12px; border: 1px solid #edf2f7; border-radius: 8px; font-family: 'Montserrat'; color: #2d3748;">
         </div>
 
         <div class="form-group">
-          <label>Plataforma</label>
+          <label for="plataformaRota">Plataforma</label>
           <select id="plataformaRota" required>
             <option value="Shopee">Shopee</option>
             <option value="Meli">Mercado Livre (Meli)</option>
@@ -247,12 +247,12 @@
         </div>
 
         <div class="form-group">
-          <label>KM Percorrido Total</label>
+          <label for="kmPercorridoInput">KM Percorrido Total</label>
           <input type="number" id="kmPercorridoInput" step="0.1" placeholder="Ex: 15.5" required />
         </div>
 
         <div class="form-group">
-          <label>Valor da Rota (R$)</label>
+          <label for="valorRota">Valor da Rota (R$)</label>
           <input type="number" id="valorRota" step="0.01" placeholder="0.00" required />
         </div>
 
@@ -266,9 +266,9 @@
     </div>
   </div>
 
-  <div class="modal" id="modalEncerrarRota">
+  <div class="modal" id="modalEncerrarRota" role="dialog" aria-modal="true" aria-labelledby="tituloModalEncerrarRota" aria-hidden="true">
     <div class="modal-content">
-      <h3>Finalizar Rota</h3>
+      <h3 id="tituloModalEncerrarRota">Finalizar Rota</h3>
       <form id="formEncerrarRota">
         <div class="form-group">
           <label>Plataforma</label>
@@ -285,7 +285,7 @@
         </div>
 
         <div class="form-group">
-          <label>Consumo do Veículo (Km/L)</label>
+          <label for="consumoInput">Consumo do Veículo (Km/L)</label>
           <input type="number" id="consumoInput" step="0.1" placeholder="Ex: 10" required />
         </div>
 
@@ -303,13 +303,13 @@
       </form>
     </div>
   </div>
-  <div class="modal" id="modalConfirmarExclusao">
+  <div class="modal" id="modalConfirmarExclusao" role="alertdialog" aria-modal="true" aria-labelledby="tituloModalExcluir" aria-describedby="textoModalExcluir" aria-hidden="true">
     <div class="modal-content modal-content--sm">
       <div class="modal-confirm-icon">
-        <span class="material-symbols-outlined">delete_forever</span>
+        <span class="material-symbols-outlined" aria-hidden="true">delete_forever</span>
       </div>
-      <h3 class="modal-confirm-titulo">Excluir Rota</h3>
-      <p class="modal-confirm-texto">Deseja realmente apagar esta rota? Esta ação não pode ser desfeita.</p>
+      <h3 id="tituloModalExcluir" class="modal-confirm-titulo">Excluir Rota</h3>
+      <p id="textoModalExcluir" class="modal-confirm-texto">Deseja realmente apagar esta rota? Esta ação não pode ser desfeita.</p>
       <div class="form-actions">
         <button type="button" class="btn btn-secondary" id="btnCancelarExclusao">Cancelar</button>
         <button type="button" class="btn btn-danger" id="btnConfirmarExclusao">Excluir</button>

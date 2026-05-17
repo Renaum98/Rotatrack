@@ -1,0 +1,15 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(dir \"C:\\\\Users\\\\renan\\\\OneDrive\\\\Área de Trabalho\\\\planos\\\\Rotatrack\" /B /S)",
+      "PowerShell($line = \\(Get-Content \"scripts\\\\main.js\"\\)[421]; [System.Text.Encoding]::UTF8.GetBytes\\($line\\) | ForEach-Object { '{0:X2}' -f $_ } | Select-Object -First 60)",
+      "PowerShell($path = \"scripts\\\\main.js\"; $bytes = [System.IO.File]::ReadAllBytes\\($path\\); $oldPattern = [byte[]]@\\(0x5B, 0x00, 0x2D, 0x1F, 0x3C, 0x3E, 0x5D\\); $newPattern = [System.Text.Encoding]::UTF8.GetBytes\\('[\u0000-\u001f<>]'\\); $idx = -1; for \\($i = 0; $i -le $bytes.Length - $oldPattern.Length; $i++\\) { $match = $true; for \\($j = 0; $j -lt $oldPattern.Length; $j++\\) { if \\($bytes[$i+$j] -ne $oldPattern[$j]\\) { $match = $false; break } }; if \\($match\\) { $idx = $i; break } }; if \\($idx -lt 0\\) { Write-Output \"PATTERN NOT FOUND\"; exit 1 }; $newBytes = New-Object byte[] \\($bytes.Length - $oldPattern.Length + $newPattern.Length\\); [Array]::Copy\\($bytes, 0, $newBytes, 0, $idx\\); [Array]::Copy\\($newPattern, 0, $newBytes, $idx, $newPattern.Length\\); [Array]::Copy\\($bytes, $idx + $oldPattern.Length, $newBytes, $idx + $newPattern.Length, $bytes.Length - $idx - $oldPattern.Length\\); [System.IO.File]::WriteAllBytes\\($path, $newBytes\\); Write-Output \"Replaced at offset $idx\")",
+      "Bash(node --check scripts/main.js)",
+      "Bash(node --check scripts/storage.js)",
+      "Bash(node --check scripts/routes.js)",
+      "Bash(node --check scripts/social.js)",
+      "Bash(node --check scripts/ui.js)",
+      "Bash(python -c ' *)"
+    ]
+  }
+}

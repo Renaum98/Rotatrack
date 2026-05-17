@@ -1,6 +1,7 @@
 import { state } from "./state.js";
 import { carregarDados } from "./storage.js";
 import { renderizarCalendario } from "./calendar.js";
+import { escapeHtml, formatarDataLocal } from "./utils.js";
 
 // ============================================
 // GERENCIAMENTO DE MODAIS
@@ -75,10 +76,10 @@ export function atualizarListaRotas() {
     ].sort();
 
     filtroAppInput.innerHTML = `<option value="todas">Todas</option>`;
-
     appsUnicos.forEach((app) => {
       if (!app) return;
       const option = document.createElement("option");
+      // value e textContent NÃO interpretam HTML — seguro mesmo com user input
       option.value = app;
       option.textContent = app;
       filtroAppInput.appendChild(option);
@@ -142,21 +143,24 @@ export function atualizarListaRotas() {
 
       // --- NOVO: LÓGICA DO MOTORISTA ---
       // Pega o nome salvo ou usa "Eu" como padrão para rotas antigas
-      const motorista = rota.motorista || "Eu";
+      const motorista = escapeHtml(rota.motorista || "Eu");
+      const plataforma = escapeHtml(rota.plataforma || "");
+      const rotaId = escapeHtml(rota.id);
+      const valorFmt = Number(rota.valor || 0).toFixed(2);
 
       return `
-        <div class="rota-card-simples" data-rota-id="${rota.id}">
-          
+        <div class="rota-card-simples" data-rota-id="${rotaId}">
+
           <div class="motorista-badge">
               ${motorista}
           </div>
           <div class="rota-actions-top">
-            
 
-            <button class="btn-mini-action btn-editar" data-id="${rota.id}">
+
+            <button class="btn-mini-action btn-editar" data-id="${rotaId}">
                <span class="material-symbols-outlined">edit</span>
             </button>
-            <button class="btn-mini-action btn-excluir" data-id="${rota.id}">
+            <button class="btn-mini-action btn-excluir" data-id="${rotaId}">
                <span class="material-symbols-outlined">close</span>
             </button>
           </div>
@@ -170,7 +174,7 @@ export function atualizarListaRotas() {
                 })}
             </div>
             <div class="rota-valor-total">
-                R$ ${rota.valor?.toFixed(2) || "0.00"}
+                R$ ${valorFmt}
             </div>
           </div>
 
@@ -192,7 +196,7 @@ export function atualizarListaRotas() {
              </div>
              <div class="info-item">
                <span class="info-label">App</span>
-               <span class="info-value">${rota.plataforma}</span>
+               <span class="info-value">${plataforma}</span>
              </div>
           </div>
         </div>
@@ -271,15 +275,8 @@ export function atualizarPaginaFinanceiro() {
     const primeiroDia = new Date(hoje.getFullYear(), hoje.getMonth(), 1);
     const ultimoDia = new Date(hoje.getFullYear(), hoje.getMonth() + 1, 0);
 
-    const firstDayFormat = (date) => {
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, "0");
-      const day = String(date.getDate()).padStart(2, "0");
-      return `${year}-${month}-${day}`;
-    };
-
-    inputInicio.value = firstDayFormat(primeiroDia);
-    inputFim.value = firstDayFormat(ultimoDia);
+    inputInicio.value = formatarDataLocal(primeiroDia);
+    inputFim.value = formatarDataLocal(ultimoDia);
   }
 
   const dataInicio = new Date(inputInicio.value + "T00:00:00");
@@ -366,15 +363,9 @@ export function atualizarPaginaFinanceiro() {
     const qtd = rotasFiltradas.length;
     // Pequeno ajuste visual para mostrar quem está sendo filtrado
     const textoFiltro =
-      motoristaFiltro === "todos" ? "" : ` (${motoristaFiltro})`;
+      motoristaFiltro === "todos" ? "" : ` (${escapeHtml(motoristaFiltro)})`;
     elTotalRotas.innerHTML = `Rotas realizadas${textoFiltro}: <strong>${qtd}</strong>`;
   }
-}
-function firstDayFormat(date) {
-  const year = date.getFullYear();
-  const month = String(date.getMonth() + 1).padStart(2, "0");
-  const day = String(date.getDate()).padStart(2, "0");
-  return `${year}-${month}-${day}`;
 }
 // ============================================
 // CARROSSEL DE RESUMO (HOME)

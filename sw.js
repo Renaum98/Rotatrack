@@ -1,4 +1,6 @@
-const CACHE_NAME = "rotatrack-v4.6";
+// IMPORTANTE: bump esta versão a cada deploy para forçar atualização do cache.
+// Os clientes só pegam o SW novo após `skipWaiting` + reload (ver `message` handler abaixo).
+const CACHE_NAME = "rotatrack-v4.7";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -31,31 +33,36 @@ const CDN_HOSTS = [
   "www.gstatic.com",
 ];
 
-// 1. INSTALAÇÃO
+// 1. INSTALAÇÃO — pré-cacheia tudo e já promove pra waiting/active
 self.addEventListener("install", (event) => {
   self.skipWaiting();
-
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(urlsToCache);
-    }),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(urlsToCache)),
   );
 });
 
-// 2. ATIVAÇÃO
+// 2. ATIVAÇÃO — limpa caches de versões antigas e assume controle
 self.addEventListener("activate", (event) => {
   event.waitUntil(
-    caches.keys().then((cacheNames) => {
-      return Promise.all(
-        cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
-            return caches.delete(cacheName);
-          }
-        }),
-      );
-    }),
+    caches
+      .keys()
+      .then((cacheNames) =>
+        Promise.all(
+          cacheNames
+            .filter((name) => name !== CACHE_NAME)
+            .map((name) => caches.delete(name)),
+        ),
+      )
+      .then(() => self.clients.claim()),
   );
-  return self.clients.claim();
+});
+
+// Permite a página forçar update sem fechar todas as abas:
+//   navigator.serviceWorker.controller.postMessage({ type: 'SKIP_WAITING' })
+self.addEventListener("message", (event) => {
+  if (event.data && event.data.type === "SKIP_WAITING") {
+    self.skipWaiting();
+  }
 });
 
 // 3. ESTRATÉGIAS:
@@ -93,14 +100,29 @@ self.addEventListener("fetch", (event) => {
   }
 });
 
+function isCacheable(res) {
+  // Só cacheia respostas OK e do tipo basic/cors (evita opaque/redirect)
+  return res && res.status === 200 && (res.type === "basic" || res.type === "cors");
+}
+
 function networkFirst(req) {
   return fetch(req)
     .then((res) => {
-      const copy = res.clone();
-      caches.open(CACHE_NAME).then((c) => c.put(req, copy));
+      if (isCacheable(res)) {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => {});
+      }
       return res;
     })
-    .catch(() => caches.match(req).then((r) => r || caches.match("./inicio.html")));
+    .catch(() =>
+      caches.match(req).then(
+        (r) =>
+          r ||
+          caches.match("./inicio.html") ||
+          caches.match("./index.html") ||
+          new Response("Offline", { status: 503, statusText: "Offline" }),
+      ),
+    );
 }
 
 function staleWhileRevalidate(req) {
@@ -108,7 +130,9 @@ function staleWhileRevalidate(req) {
     cache.match(req).then((cached) => {
       const fetchPromise = fetch(req)
         .then((res) => {
-          if (res && res.status === 200) cache.put(req, res.clone());
+          if (isCacheable(res)) {
+            cache.put(req, res.clone()).catch(() => {});
+          }
           return res;
         })
         .catch(() => cached);

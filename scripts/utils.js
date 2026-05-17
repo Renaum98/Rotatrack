@@ -1,4 +1,8 @@
 import { state } from "./state.js";
+import {
+  NOTIFICACAO_DURACAO_MS,
+  NOTIFICACAO_ANIMACAO_MS,
+} from "./constants.js";
 
 // ============================================
 // FORMATAÇÃO E UTILITÁRIOS (ADICIONADO)
@@ -8,6 +12,92 @@ export function formatCurrency(value) {
     style: "currency",
     currency: "BRL",
   }).format(value);
+}
+
+// Roda uma ação assíncrona com loading state padronizado no botão:
+// desabilita, troca texto (opcional) e restaura tudo no `finally`.
+// Uso:
+//   btn.onclick = () => comBotaoOcupado(btn, "Salvando...", async () => { ... })
+export async function comBotaoOcupado(btn, textoOcupado, acao) {
+  if (!btn) return acao();
+  const textoOriginal = btn.textContent;
+  const ficouDesabilitado = btn.disabled;
+  btn.disabled = true;
+  if (textoOcupado) btn.textContent = textoOcupado;
+  try {
+    return await acao();
+  } finally {
+    btn.disabled = ficouDesabilitado;
+    if (textoOcupado) btn.textContent = textoOriginal;
+  }
+}
+
+// ============================================
+// LOGGING ESTRUTURADO
+// Centraliza console.error/console.warn com um prefixo de contexto
+// para facilitar rastrear de onde veio um erro nos logs do navegador.
+// ============================================
+export function criarLogger(escopo) {
+  const prefixo = `[${escopo}]`;
+  return {
+    info: (msg, ...extras) => console.info(prefixo, msg, ...extras),
+    warn: (msg, ...extras) => console.warn(prefixo, msg, ...extras),
+    error: (msg, err) => {
+      if (err instanceof Error) {
+        console.error(prefixo, msg, err.message, err);
+      } else if (err !== undefined) {
+        console.error(prefixo, msg, err);
+      } else {
+        console.error(prefixo, msg);
+      }
+    },
+  };
+}
+
+// Formata Date como YYYY-MM-DD no fuso local (não usa toISOString — esse vira UTC)
+export function formatarDataLocal(date) {
+  const d = date instanceof Date ? date : new Date(date);
+  const ano = d.getFullYear();
+  const mes = String(d.getMonth() + 1).padStart(2, "0");
+  const dia = String(d.getDate()).padStart(2, "0");
+  return `${ano}-${mes}-${dia}`;
+}
+
+// Parseia YYYY-MM-DD → Date local. Retorna null se inválido (não usa Date(string)
+// que tem regras malucas de fuso). Valida overflow (ex.: 2025-02-31 não cola).
+export function parseDataLocal(str) {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(str || "");
+  if (!m) return null;
+  const ano = parseInt(m[1], 10);
+  const mes = parseInt(m[2], 10) - 1;
+  const dia = parseInt(m[3], 10);
+  const d = new Date(ano, mes, dia);
+  if (d.getFullYear() !== ano || d.getMonth() !== mes || d.getDate() !== dia) {
+    return null;
+  }
+  return d;
+}
+
+// Debounce: agrupa chamadas em rajada e só dispara `fn` depois de `ms`
+// sem novas chamadas. Útil para inputs que salvam em Firestore a cada tecla.
+export function debounce(fn, ms = 400) {
+  let timer = null;
+  return function (...args) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), ms);
+  };
+}
+
+// Escapa caracteres perigosos antes de interpolar em innerHTML.
+// Use SEMPRE que injetar valores vindos do usuário/Firestore em templates.
+export function escapeHtml(value) {
+  if (value === null || value === undefined) return "";
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 // ============================================
@@ -30,64 +120,25 @@ export function fecharModal(modalId) {
 }
 
 // ============================================
-// SISTEMA DE NOTIFICAÇÕES
+// SISTEMA DE NOTIFICAÇÕES — estilo em styles/components.css
 // ============================================
+const TIPOS_NOTIFICACAO = new Set(["info", "success", "error", "warning"]);
+
 export function mostrarNotificacao(mensagem, tipo = "info") {
-  // Remover notificações antigas
+  if (!TIPOS_NOTIFICACAO.has(tipo)) tipo = "info";
+  // Remove qualquer notificação anterior pra não empilhar
   document.querySelectorAll(".notificacao").forEach((n) => n.remove());
 
   const notificacao = document.createElement("div");
   notificacao.className = `notificacao notificacao-${tipo}`;
+  notificacao.setAttribute("role", tipo === "error" ? "alert" : "status");
   notificacao.textContent = mensagem;
-  notificacao.style.cssText = `
-    position: fixed;
-    top: 20px;
-    right: 20px;
-    background: ${
-      tipo === "success"
-        ? "#10b981"
-        : tipo === "error"
-          ? "#ef4444"
-          : tipo === "warning"
-            ? "#f59e0b"
-            : "#667eea"
-    };
-    color: white;
-    padding: 15px 20px;
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.2);
-    z-index: 9999;
-    animation: slideIn 0.3s ease;
-    font-family: 'Montserrat', sans-serif;
-    font-weight: 500;
-    max-width: 300px;
-  `;
-
   document.body.appendChild(notificacao);
 
   setTimeout(() => {
-    notificacao.style.animation = "slideOut 0.3s ease";
-    setTimeout(() => notificacao.remove(), 300);
-  }, 3000);
-}
-
-// ============================================
-// ESTILOS DINÂMICOS (SEU CÓDIGO ORIGINAL)
-// ============================================
-if (!document.querySelector("#notificacao-styles")) {
-  const style = document.createElement("style");
-  style.id = "notificacao-styles";
-  style.textContent = `
-    @keyframes slideIn {
-      from { transform: translateX(400px); opacity: 0; }
-      to { transform: translateX(0); opacity: 1; }
-    }
-    @keyframes slideOut {
-      from { transform: translateX(0); opacity: 1; }
-      to { transform: translateX(400px); opacity: 0; }
-    }
-  `;
-  document.head.appendChild(style);
+    notificacao.classList.add("is-closing");
+    setTimeout(() => notificacao.remove(), NOTIFICACAO_ANIMACAO_MS);
+  }, NOTIFICACAO_DURACAO_MS);
 }
 
 // ============================================

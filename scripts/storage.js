@@ -1,7 +1,9 @@
 import { state } from "./state.js";
-import { mostrarNotificacao } from "./utils.js";
+import { mostrarNotificacao, criarLogger } from "./utils.js";
 import { atualizarListaRotas } from "./ui.js";
 import { atualizarResumoPublico } from "./social.js";
+
+const log = criarLogger("storage");
 
 // ============================================
 // CONFIGURAÇÕES GLOBAIS (FIRESTORE SYNC)
@@ -53,7 +55,7 @@ export async function carregarConfiguracoes() {
       }
     }
   } catch (error) {
-    console.error("Erro ao carregar configurações:", error);
+    log.error("Erro ao carregar configurações", error);
   }
 }
 
@@ -76,23 +78,96 @@ export async function salvarConfiguracoes(dados) {
         { merge: true },
       );
   } catch (error) {
-    console.error("Erro ao salvar configuração:", error);
+    log.error("Erro ao salvar configuração", error);
   }
+}
+
+// Chaves canônicas do localStorage — uma fonte só, em vez de strings espalhadas
+export const LOCAL_KEYS = {
+  rotas: "rotas",
+  precoGasolina: "precoGasolina",
+  consumoMedio: "consumoMedio",
+  metaMensal: "metaMensal",
+  motorista1: "nomeMotorista1",
+  motorista2: "nomeMotorista2",
+  tema: "theme",
+};
+
+// Persiste uma config tanto no localStorage (acesso rápido/offline) quanto no
+// Firestore. JSON é só para valores objetos/arrays; primitivos vão direto.
+export function persistirConfig(chave, valor) {
+  try {
+    const serializado =
+      typeof valor === "object" && valor !== null
+        ? JSON.stringify(valor)
+        : String(valor);
+    localStorage.setItem(chave, serializado);
+  } catch (e) {
+    log.error(`Erro ao salvar ${chave} no localStorage`, e);
+  }
+  // Mapeia a chave local para o nome do campo no Firestore
+  const firestoreKey =
+    chave === LOCAL_KEYS.metaMensal ? "meta" : chave;
+  salvarConfiguracoes({ [firestoreKey]: valor });
 }
 
 // ============================================
 // SINCRONIZAÇÃO EM TEMPO REAL (SUBCOLEÇÃO)
 // ============================================
-export function carregarDados() {
-  if (state.listenerUnsubscribe) {
+// Reconexão automática com backoff exponencial em caso de erro do listener.
+// Cancela timers pendentes em pararSincronizacao() para evitar reconexões
+// fantasmas após logout.
+const MAX_RETRY_ATTEMPTS = 5;
+let retryAttempts = 0;
+let retryTimer = null;
+
+function agendarReconexao() {
+  if (retryAttempts >= MAX_RETRY_ATTEMPTS) {
+    log.warn("Reconexão Firestore: máximo de tentativas atingido.");
     return;
   }
+  const delay = Math.min(1000 * Math.pow(2, retryAttempts), 30000);
+  retryAttempts++;
+  retryTimer = setTimeout(() => {
+    retryTimer = null;
+    // Só re-tenta se ainda há usuário logado e Firestore disponível
+    if (window.firebaseDb?.auth?.currentUser && state.db?.db) {
+      carregarDados();
+    }
+  }, delay);
+}
 
+// Quando a conexão volta, força reconexão imediata (sem esperar backoff)
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => {
+    if (retryTimer) {
+      clearTimeout(retryTimer);
+      retryTimer = null;
+    }
+    retryAttempts = 0;
+    if (!state.listenerUnsubscribe && window.firebaseDb?.auth?.currentUser) {
+      carregarDados();
+    }
+  });
+}
+
+export function carregarDados() {
   const user = window.firebaseDb?.auth?.currentUser;
 
   if (!state.db || !state.db.db || !user) {
+    // Se cair offline depois de já ter um listener ativo, descarta para não vazar
+    pararSincronizacao();
     carregarDadosLocal();
     return;
+  }
+
+  // Se já existe um listener ativo para o MESMO usuário, não faz nada.
+  // Se é de outro usuário (logout + login com outra conta), descarta antes.
+  if (state.listenerUnsubscribe) {
+    if (state.listenerUserUid === user.uid) {
+      return;
+    }
+    pararSincronizacao();
   }
 
   carregarConfiguracoes();
@@ -102,6 +177,7 @@ export function carregarDados() {
     // Agora acessamos: usuarios -> ID_DO_USER -> rotas
     // Não precisamos mais do .where('userId') porque já estamos dentro da pasta do usuário!
 
+    state.listenerUserUid = user.uid;
     state.listenerUnsubscribe = state.db.db
       .collection("usuarios") // 1. Entra em usuarios
       .doc(user.uid) // 2. Entra no documento do usuário atual
@@ -124,31 +200,37 @@ export function carregarDados() {
           });
 
           state.rotas = rotasAtualizadas;
-          localStorage.setItem("rotas", JSON.stringify(state.rotas));
+          localStorage.setItem(LOCAL_KEYS.rotas, JSON.stringify(state.rotas));
+          // Conexão OK — zera contador de retry
+          retryAttempts = 0;
           atualizarListaRotas();
           atualizarResumoPublico(rotasAtualizadas);
         },
         (error) => {
-          console.error("Erro no listener:", error);
-          mostrarNotificacao("Erro de conexão. Usando modo offline.", "error");
+          log.error("Erro no listener Firestore", error);
+          mostrarNotificacao("Erro de conexão. Tentando reconectar...", "error");
+          // Limpa o listener atual e agenda nova tentativa com backoff
+          pararSincronizacao();
           carregarDadosLocal();
+          agendarReconexao();
         },
       );
   } catch (error) {
-    console.error("Erro ao iniciar listener:", error);
+    log.error("Erro ao iniciar listener Firestore", error);
+    pararSincronizacao();
     carregarDadosLocal();
   }
 }
 
 // ... carregarDadosLocal continua igual ...
 export function carregarDadosLocal() {
-  const rotasSalvas = localStorage.getItem("rotas");
+  const rotasSalvas = localStorage.getItem(LOCAL_KEYS.rotas);
   if (rotasSalvas) {
     try {
       state.rotas = JSON.parse(rotasSalvas);
       atualizarListaRotas();
     } catch (e) {
-      console.error("Erro ao ler localStorage", e);
+      log.error("Erro ao ler rotas do localStorage", e);
     }
   }
 }
@@ -195,7 +277,7 @@ export async function salvarRotaFinalizada(rota) {
       atualizarListaRotas();
     }
   } catch (error) {
-    console.error("Erro ao salvar rota:", error);
+    log.error("Erro ao salvar rota", error);
     mostrarNotificacao("Erro ao salvar. Verifique sua conexão.", "error");
     throw error;
   }
@@ -209,7 +291,18 @@ export async function salvarRotaFinalizada(rota) {
 // ou você pode ajustar no seu routes.js seguindo a mesma lógica do caminho .collection('usuarios')...
 export function pararSincronizacao() {
   if (state.listenerUnsubscribe) {
-    state.listenerUnsubscribe();
+    try {
+      state.listenerUnsubscribe();
+    } catch (e) {
+      log.error("Erro ao parar listener", e);
+    }
     state.listenerUnsubscribe = null;
+    state.listenerUserUid = null;
   }
+  // Cancela qualquer reconexão pendente — logout não deve reconectar
+  if (retryTimer) {
+    clearTimeout(retryTimer);
+    retryTimer = null;
+  }
+  retryAttempts = 0;
 }

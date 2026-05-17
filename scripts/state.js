@@ -14,4 +14,5 @@ export const state = {
   },
   chartInstance: null,
   listenerUnsubscribe: null,
+  listenerUserUid: null,
 };
