@@ -649,7 +649,7 @@ export function initPadronizador() {
         fontFamily: "'Montserrat', sans-serif",
         marginBottom: "10px",
       });
-      titulo.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px">warning</span> Endereços suspeitos — revise manualmente`;
+      titulo.innerHTML = `<svg class="icon" aria-hidden="true" style="font-size:16px"><use href="#icon-warning"/></svg> Endereços suspeitos — revise manualmente`;
       box.appendChild(titulo);
 
       const ul = document.createElement("ul");
@@ -720,7 +720,7 @@ export function initPadronizador() {
         fontFamily: "'Montserrat', sans-serif",
         marginBottom: "10px",
       });
-      tituloResgatados.innerHTML = `<span class="material-symbols-outlined" style="font-size:16px">info</span> Endereços resgatados (Confira antes de exportar)`;
+      tituloResgatados.innerHTML = `<svg class="icon" aria-hidden="true" style="font-size:16px"><use href="#icon-info"/></svg> Endereços resgatados (Confira antes de exportar)`;
       boxResgatados.appendChild(tituloResgatados);
 
       const ulResgatados = document.createElement("ul");

@@ -158,10 +158,10 @@ export function atualizarListaRotas() {
 
 
             <button class="btn-mini-action btn-editar" data-id="${rotaId}">
-               <span class="material-symbols-outlined">edit</span>
+               <svg class="icon" aria-hidden="true"><use href="#icon-edit"/></svg>
             </button>
             <button class="btn-mini-action btn-excluir" data-id="${rotaId}">
-               <span class="material-symbols-outlined">close</span>
+               <svg class="icon" aria-hidden="true"><use href="#icon-close"/></svg>
             </button>
           </div>
 

@@ -9,7 +9,8 @@
       "Bash(node --check scripts/routes.js)",
       "Bash(node --check scripts/social.js)",
       "Bash(node --check scripts/ui.js)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "WebFetch(domain:fonts.gstatic.com)"
     ]
   }
 }

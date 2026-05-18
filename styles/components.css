@@ -1,3 +1,17 @@
+/* ============================================
+   Ícones (SVG sprite — ver inicio.html e assets/icons.svg)
+   Herda cor do contexto (currentColor) e tamanho do font-size.
+   Para mudar tamanho: font-size no contêiner OU width/height direto.
+   ============================================ */
+.icon {
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  fill: currentColor;
+  flex-shrink: 0;
+}
+
 /* Componentes Reutilizáveis */
 
 /* Cards Gerais */
@@ -23,10 +37,13 @@
   color: var(--cor-branco);
   padding: var(--espacamento-medio);
   border-radius: var(--radius-medio);
-  text-align: center;
   font-weight: 500;
   font-size: 1rem;
   cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
   transition: transform var(--transicao-rapida),
     box-shadow var(--transicao-rapida);
 }
@@ -247,7 +264,7 @@
   color: var(--cor-perigo);
 }
 
-.modal-confirm-icon .material-symbols-outlined {
+.modal-confirm-icon .icon {
   font-size: 28px;
 }
 
@@ -272,7 +289,7 @@
   color: var(--cor-texto-terciario);
 }
 
-.empty-state .material-symbols-outlined {
+.empty-state .icon {
   font-size: 80px;
   opacity: 0.5;
   margin-bottom: var(--espacamento-medio);

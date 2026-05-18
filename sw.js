@@ -1,6 +1,6 @@
 // IMPORTANTE: bump esta versão a cada deploy para forçar atualização do cache.
 // Os clientes só pegam o SW novo após `skipWaiting` + reload (ver `message` handler abaixo).
-const CACHE_NAME = "rotatrack-v4.7";
+const CACHE_NAME = "rotatrack-v4.9";
 const urlsToCache = [
   "./",
   "./index.html",
@@ -21,6 +21,7 @@ const urlsToCache = [
   "./scripts/utils.js",
   "./scripts/calendar.js",
   "./scripts/padronizador.js",
+  "./scripts/constants.js",
   "./assets/rota_logo-192.png",
   "./assets/rota_logo-512.png",
 ];

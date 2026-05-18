@@ -1,7 +1,6 @@
 import { state } from "./state.js";
 import { mostrarNotificacao, criarLogger } from "./utils.js";
 import { atualizarListaRotas } from "./ui.js";
-import { atualizarResumoPublico } from "./social.js";
 
 const log = criarLogger("storage");
 
@@ -204,7 +203,6 @@ export function carregarDados() {
           // Conexão OK — zera contador de retry
           retryAttempts = 0;
           atualizarListaRotas();
-          atualizarResumoPublico(rotasAtualizadas);
         },
         (error) => {
           log.error("Erro no listener Firestore", error);

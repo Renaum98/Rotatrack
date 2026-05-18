@@ -4,7 +4,6 @@ import {
   baixarRelatorioCSV,
   debounce,
   formatarDataLocal,
-  comBotaoOcupado,
 } from "./utils.js";
 import {
   mudarPagina,
@@ -25,7 +24,6 @@ import {
   NOME_MOTORISTA_MAX_CHARS,
   DEBOUNCE_META_MS,
 } from "./constants.js";
-import { renderizarPaginaSocial, enviarSolicitacao } from "./social.js";
 import { salvarNovaRota } from "./routes.js";
 import { inicializarCalendario } from "./calendar.js";
 import { initPadronizador } from "./padronizador.js";
@@ -223,7 +221,6 @@ function configurarEventListeners() {
   configurarNavegacao();
   configurarFechamentoOverlay();
   configurarMotoristas();
-  configurarAdicionarAmigo();
   configurarModalExclusao();
   configurarFiltrosExtras();
   configurarLogout();
@@ -346,7 +343,6 @@ function configurarNavegacao() {
       mudarPagina(e, pagina);
       if (pagina === "financeiro") atualizarPaginaFinanceiro();
       if (pagina === "config") atualizarPerfilUsuario();
-      if (pagina === "social") renderizarPaginaSocial();
     });
   });
 }
@@ -424,24 +420,6 @@ function configurarMotoristas() {
     atualizarSelectMotoristas();
     mostrarNotificacao("Nomes atualizados!", "success");
   });
-}
-
-function configurarAdicionarAmigo() {
-  const btn = document.getElementById("btnAdicionarAmigo");
-  const input = document.getElementById("inputEmailAmigo");
-  if (!btn || !input) return;
-
-  btn.onclick = () =>
-    comBotaoOcupado(btn, "Enviando...", async () => {
-      const email = input.value.trim();
-      if (!email) {
-        mostrarNotificacao("Digite um email.", "warning");
-        return;
-      }
-      const resultado = await enviarSolicitacao(email);
-      mostrarNotificacao(resultado.message, resultado.success ? "success" : "warning");
-      if (resultado.success) input.value = "";
-    });
 }
 
 function configurarModalExclusao() {

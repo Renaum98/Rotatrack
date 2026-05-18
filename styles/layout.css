@@ -87,6 +87,6 @@ body {
   transition: all 0.3s;
 }
 
-.menu-item_link .material-symbols-outlined {
+.menu-item_link .icon {
   font-size: 32px;
 }
