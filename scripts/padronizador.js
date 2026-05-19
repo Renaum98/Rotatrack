@@ -306,8 +306,8 @@ export function initPadronizador() {
   if (btnNovo) {
     btnNovo.addEventListener("click", () => {
       dropzone.classList.remove("file-ready");
-      dropzone.querySelector('span[class*="material"]').textContent =
-        "upload_file";
+      const useEl = dropzone.querySelector("svg use");
+      if (useEl) useEl.setAttribute("href", "#icon-upload_file");
       document.getElementById("padronDropLabel").textContent =
         "Selecionar arquivo";
 
@@ -354,8 +354,8 @@ export function initPadronizador() {
     dataDoArquivo = new Date(file.lastModified);
 
     dropzone.classList.add("file-ready");
-    dropzone.querySelector('span[class*="material"]').textContent =
-      "check_circle";
+    const useEl = dropzone.querySelector("svg use");
+    if (useEl) useEl.setAttribute("href", "#icon-check_circle");
     document.getElementById("padronDropLabel").textContent = file.name;
 
     btnRow.style.display = "none";
