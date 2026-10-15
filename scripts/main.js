@@ -108,7 +108,7 @@ function atualizarCorDaBarra(tema) {
   const metaThemeColor = document.querySelector('meta[name="theme-color"]');
 
   if (metaThemeColor) {
-    const cor = tema === "dark" ? "#1a202c" : "#f1f1f1";
+    const cor = tema === "dark" ? "#1a202c" : "#efe7d9";
     metaThemeColor.setAttribute("content", cor);
   } else {
     console.warn("Tag meta theme-color não encontrada no HTML.");

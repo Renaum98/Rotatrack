@@ -5,18 +5,17 @@
   box-sizing: border-box;
 }
 
-input,
-textarea {
-  -webkit-user-select: auto;
-  user-select: auto;
-}
+/* =========================================
+   CAMPOS COM COMPORTAMENTO DE APP
+   ========================================= */
 
-/* --- CORREÇÃO PARA IPHONE (iOS) --- */
-input[type="date"],
-input[type="text"],
-input[type="number"],
-input[type="month"],
-select {
+/* Padrão de todos os campos:
+   - 16px de fonte: abaixo disso o iOS dá zoom ao focar o campo
+   - sem aparência nativa do sistema
+   - toque rápido, sem atraso/zoom de duplo toque */
+input:not([type="checkbox"]):not([type="radio"]):not([type="file"]):not([type="range"]),
+select,
+textarea {
   -webkit-appearance: none;
   -moz-appearance: none;
   appearance: none;
@@ -24,10 +23,75 @@ select {
   width: 100%;
   max-width: 100%;
   font-size: 16px;
+  font-family: "Montserrat", sans-serif;
+  touch-action: manipulation;
+  caret-color: var(--cor-primaria);
+}
+
+/* Campos de digitação: precisam permitir selecionar/colar o próprio texto */
+input[type="text"],
+input[type="email"],
+input[type="password"],
+input[type="number"],
+input[type="search"],
+input[type="tel"],
+textarea {
+  -webkit-user-select: text;
+  user-select: text;
+  -webkit-touch-callout: default;
+}
+
+/* Campos de escolha (select, data, mês, checkbox, arquivo): nada selecionável */
+select,
+input[type="date"],
+input[type="month"],
+input[type="checkbox"],
+input[type="file"] {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+input[type="checkbox"],
+input[type="radio"] {
+  accent-color: var(--cor-primaria);
+}
+
+/* Placeholder legível e igual em todos os navegadores (Firefox aplica opacidade) */
+::placeholder {
+  color: var(--cor-placeholder);
+  opacity: 1;
+}
+
+/* Remove as setinhas do input numérico */
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type="number"] {
+  -moz-appearance: textfield;
+}
+
+/* Sem fundo amarelo/azul do autofill */
+input:-webkit-autofill {
+  -webkit-text-fill-color: var(--cor-texto);
+  -webkit-box-shadow: 0 0 0 1000px var(--cor-input-bg) inset;
 }
 
 html {
   touch-action: pan-x pan-y;
+  /* Sem scrollbar: a rolagem continua, mas a barra não aparece nem empurra o
+     layout ao trocar entre páginas curtas e longas */
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
 }
 
 body {
@@ -45,6 +109,15 @@ body {
 
   /* 4. Remove aquele quadrado azul/cinza feio que pisca quando você clica num botão/link no celular */
   -webkit-tap-highlight-color: transparent;
+
+  /* 5. Sem menu de "copiar/compartilhar" ao segurar o dedo em textos */
+  -webkit-touch-callout: none;
+}
+
+button,
+a,
+label {
+  touch-action: manipulation;
 }
 
 ul {

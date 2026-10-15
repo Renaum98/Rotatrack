@@ -1,41 +1,55 @@
 /* Variáveis CSS */
 :root {
   /* --- Cores (Modo Claro) --- */
-  --cor-primaria: #667eea;
+  /* Tons ajustados para contraste AA (4.5:1) com texto branco e sobre os cards */
+  --cor-primaria: #5d64d4;
   --cor-secundaria: #764ba2;
-  --cor-sucesso: #10b981;
-  --cor-perigo: #ef4444;
+  --cor-sucesso: #0b7f5b;
+  --cor-perigo: #c93636;
 
-  --cor-texto: #333;
-  --cor-texto-opaco: #555;
-  --cor-texto-secundario: #666;
-  --cor-texto-terciario: #999;
+  /* Texto/ícone sobre fundos coloridos (botões, gradientes, badges) */
+  --cor-texto-sobre-cor: #ffffff;
 
-  --cor-branco: #ffffff;
-  /* Cor dos Cards */
-  --cor-background: #f1f1f1;
-  /* Cor do Fundo da Tela */
+  /* Textos levemente quentes para combinar com o fundo creme */
+  --cor-texto: #3a342c;
+  --cor-texto-opaco: #574f45;
+  --cor-texto-secundario: #5f564b;
+  --cor-texto-terciario: #6e655a;
+
+  --cor-branco: #fbf7ef;
+  /* Cor dos Cards (creme claro, não branco puro) */
+  --cor-background: #efe7d9;
+  /* Cor do Fundo da Tela (creme) */
 
   /* Fundos de detalhe */
-  --cor-fundo-claro: #f0f4ff;
-  --cor-fundo-secundario: #e5edff;
+  --cor-fundo-claro: #f6f0e5;
+  --cor-fundo-secundario: #ede4d4;
 
   /* Adicionado para controlar inputs no modo escuro */
-  --cor-input-bg: #f7fafc;
+  --cor-input-bg: #f4eee3;
 
-  --cor-borda: #e5e7eb;
+  --cor-borda: #e4d9c6;
+  /* Borda de campos (input/select/toggle): contraste 3:1 com o card */
+  --cor-borda-campo: #968872;
+  --cor-placeholder: var(--cor-texto-terciario);
 
-  /* Gradientes */
-  --gradiente-principal: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  /* Tab menu: tom escuro para não se confundir com os cards */
+  --cor-menu-bg: #3a332b;
+  --cor-menu-icone: #b9ae9d;
+  --cor-menu-icone-ativo: #fbf7ef;
+
+  /* Gradientes (sutis no modo claro) */
+  --gradiente-principal: linear-gradient(135deg, #6468d0 0%, #6c62c6 100%);
+  --gradiente-sucesso: linear-gradient(135deg, #0e8460 0%, #0b7656 100%);
 
   /* Sombras */
   --sombra-pequena: 0 2px 10px rgba(0, 0, 0, 0.1);
   --sombra-media: 0 5px 20px rgba(0, 0, 0, 0.4);
-  --sombra-grande: 0 10px 40px rgba(0, 0, 0, 0.2);
+  --sombra-grande: 0 10px 30px rgba(60, 45, 25, 0.12);
   --sombra-texto: 2px 2px 4px rgba(0, 0, 0, 0.2);
 
-  /* Mantive a última definição que você tinha (Neumorphism) */
-  --sombra-card-leve: 3px 3px 3px rgba(0, 0, 0, 0.082), -3px -3px 3px rgba(255, 255, 255, 0.288);
+  /* Sombra mínima: os cards se destacam pela cor e pela borda */
+  --sombra-card-leve: 0 1px 2px rgba(110, 90, 60, 0.06);
 
   /* Espaçamentos */
   --espacamento-pequeno: 10px;
@@ -52,7 +66,7 @@
   --transicao-media: 0.3s;
 
   /* Bordas */
-  --borda-leve: 1px solid rgba(3, 0, 0, 0.016);
+  --borda-leve: 1px solid rgba(110, 90, 60, 0.16);
 }
 
 /* --- MODO ESCURO (DARK MODE) --- */
@@ -65,7 +79,7 @@
   /* Cinza bem claro */
   --cor-texto-secundario: #cbd5e0;
   /* Cinza claro */
-  --cor-texto-terciario: #718096;
+  --cor-texto-terciario: #94a3b8;
   /* Cinza médio */
 
   /* Fundos Escuros */
@@ -82,12 +96,25 @@
   --cor-input-bg: #4a5568;
   /* Fundo do input escuro */
   --cor-borda: #4a5568;
+  --cor-borda-campo: #7a889d;
+  --cor-placeholder: #c3ccd8;
+
+  --cor-menu-bg: #10141c;
+  --cor-menu-icone: #8a96a8;
+  --cor-menu-icone-ativo: #f7fafc;
   --borda-leve: 1px solid rgba(255, 255, 255, 0.1);
 
   /* Ajustes de Contraste */
   --cor-primaria: #7f9cf5;
   /* Azul mais claro para ler melhor no fundo escuro */
 
+  /* Gradientes sutis no modo escuro */
+  --gradiente-principal: linear-gradient(135deg, #6468d0 0%, #6c62c6 100%);
+  --gradiente-sucesso: linear-gradient(135deg, #0e8460 0%, #0b7656 100%);
+  --cor-sucesso: #10b981;
+  --cor-perigo: #f87171;
+
   /* Sombra: Removemos o brilho branco do neumorphism para o modo escuro */
-  --sombra-card-leve: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+  --sombra-card-leve: 0 1px 2px rgba(0, 0, 0, 0.25);
+  --sombra-grande: 0 10px 30px rgba(0, 0, 0, 0.4);
 }

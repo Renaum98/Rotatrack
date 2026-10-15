@@ -8,7 +8,7 @@
   <meta name="description" content="Sistema de gerenciamento de rotas para entregadores" />
   <link rel="manifest" href="manifest.json">
 
-  <meta name="theme-color" id="meta-theme-color" content="#f1f1f1">
+  <meta name="theme-color" id="meta-theme-color" content="#efe7d9">
 
   <link rel="icon" type="image/png" href="assets/rota_logo-192.png">
   <link rel="apple-touch-icon" href="assets/rota_logo-192.png">
@@ -227,19 +227,21 @@
 
     <div class="container">
       <!--Sessao Resumo mensal-->
-      <section class="card-inicio" id="card-inicio_resumo">
+      <section id="card-inicio_resumo">
         <h3 class="card-mes-titulo" style="
               font-size: 0.9rem;
-              color: #718096;
+              color: var(--cor-texto-secundario);
               font-weight: 600;
               text-align: center;
             ">
           Resumo Mensal
         </h3>
 
-        <div class="carousel-container" id="carouselResumo">
-          <div class="loading-wrapper">
-            <div class="spinner-loading"></div>
+        <div class="carousel-wrapper">
+          <div class="carousel-container" id="carouselResumo">
+            <div class="loading-wrapper">
+              <div class="spinner-loading"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -258,7 +260,7 @@
         <div class="card-config-gasolina">
 
           <div class="gas-info-block">
-            <div class="icon-gas icon-red">
+            <div class="icon-gas">
               <svg class="icon" aria-hidden="true">
                 <use href="#icon-local_gas_station" />
               </svg>
@@ -272,7 +274,7 @@
           <div class="vertical-divider"></div>
 
           <div class="gas-info-block">
-            <div class="icon-gas icon-blue">
+            <div class="icon-gas">
               <svg class="icon" aria-hidden="true">
                 <use href="#icon-speed" />
               </svg>
@@ -482,7 +484,10 @@
     </div>
   </div>
 
+  <!-- Escurece/desfoca o conteúdo que passa por trás do menu -->
+  <div class="footer-fade" aria-hidden="true"></div>
   <div class="footer-menu">
+    <span class="footer-menu_indicador" aria-hidden="true"></span>
     <ul class="footer-menu_list">
       <li class="footer-menu_item">
         <a href="#" class="menu-item_link active" data-pagina="inicio">
@@ -602,7 +607,7 @@
         <!-- Drop / seleção de arquivo -->
         <div class="padron-dropzone" id="padronDropzone">
           <input type="file" id="padronFileInput" accept=".xlsx,.xls,.csv">
-          <svg class="icon" aria-hidden="true" style="font-size: 28px; color: #a0aec0;">
+          <svg class="icon" aria-hidden="true" style="font-size: 28px; color: var(--cor-texto-terciario);">
             <use href="#icon-upload_file" />
           </svg>
           <span id="padronDropLabel">Selecionar arquivo</span>
@@ -707,7 +712,7 @@
         </div>
 
         <div class="fin-card">
-          <div class="fin-icon icon-blue">
+          <div class="fin-icon">
             <svg class="icon" aria-hidden="true">
               <use href="#icon-payments" />
             </svg>
@@ -719,7 +724,7 @@
         </div>
 
         <div class="fin-card">
-          <div class="fin-icon icon-red">
+          <div class="fin-icon">
             <svg class="icon" aria-hidden="true">
               <use href="#icon-local_gas_station" />
             </svg>
@@ -731,7 +736,7 @@
         </div>
 
         <div class="fin-card">
-          <div class="fin-icon icon-gray">
+          <div class="fin-icon">
             <svg class="icon" aria-hidden="true">
               <use href="#icon-speed" />
             </svg>
@@ -743,7 +748,7 @@
         </div>
 
         <div class="fin-card">
-          <div class="fin-icon icon-blue" style="background: #f3e8ff; color: #8b5cf6">
+          <div class="fin-icon">
             <svg class="icon" aria-hidden="true">
               <use href="#icon-currency_exchange" />
             </svg>

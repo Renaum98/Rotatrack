@@ -25,6 +25,17 @@ export function fecharModal(modalId) {
 // ============================================
 // NAVEGAÇÃO
 // ============================================
+
+// Move o indicador do tab menu para o link ativo (via --tab-index no CSS)
+function atualizarIndicadorMenu() {
+  const links = [...document.querySelectorAll(".menu-item_link")];
+  const indice = links.findIndex((l) => l.classList.contains("active"));
+  if (indice < 0) return;
+  document
+    .querySelector(".footer-menu")
+    ?.style.setProperty("--tab-index", indice);
+}
+
 export function mudarPagina(event, pagina) {
   event.preventDefault();
 
@@ -43,6 +54,7 @@ export function mudarPagina(event, pagina) {
   if (event.currentTarget) {
     event.currentTarget.classList.add("active");
   }
+  atualizarIndicadorMenu();
 
   // Lógica específica por página
   if (pagina === "rotas") {
@@ -396,7 +408,7 @@ export function atualizarCarouselResumo() {
   );
 
   if (listaMeses.length === 0) {
-    container.innerHTML = `<div style="width:100%; text-align:center; padding:10px; font-size:0.7rem; color:#a0aec0;">Sem dados.</div>`;
+    container.innerHTML = `<div style="width:100%; text-align:center; padding:10px; font-size:0.7rem; color:var(--cor-texto-terciario);">Sem dados.</div>`;
     return;
   }
 
@@ -528,7 +540,7 @@ export function atualizarGraficoMeta() {
           name: {
             offsetY: -10,
             show: true,
-            color: "#718096",
+            color: "var(--cor-texto-secundario)",
             fontSize: "13px",
             fontWeight: 600,
           },
@@ -559,7 +571,7 @@ export function atualizarGraficoMeta() {
       },
     },
     stroke: { lineCap: "round" },
-    colors: ["#667eea"],
+    colors: ["#5d64d4"],
     labels: ["Progresso"],
   };
 

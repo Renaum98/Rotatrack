@@ -34,7 +34,7 @@
 
 .card-inicio_registrar {
   background: var(--gradiente-principal);
-  color: var(--cor-branco);
+  color: var(--cor-texto-sobre-cor);
   padding: var(--espacamento-medio);
   border-radius: var(--radius-medio);
   font-weight: 500;
@@ -50,7 +50,6 @@
 
 .card-inicio_registrar:hover {
   transform: translateY(-2px);
-  box-shadow: var(--sombra-media);
 }
 
 /* Rota Aberta (Se usar no futuro) */
@@ -165,21 +164,19 @@
   font-size: 0.9rem;
 }
 
-.form-group input,
-.form-group select {
+.form-group input {
   width: 100%;
   padding: 12px;
   background: var(--cor-input-bg);
   color: var(--cor-texto);
-  border: 1px solid var(--cor-borda);
+  border: 1px solid var(--cor-borda-campo);
   border-radius: var(--radius-pequeno);
   font-size: 1rem;
   font-family: "Montserrat", sans-serif;
   transition: border-color var(--transicao-rapida);
 }
 
-.form-group input:focus,
-.form-group select:focus {
+.form-group input:focus {
   outline: none;
   border-color: var(--cor-primaria);
   background: var(--cor-branco);
@@ -227,23 +224,23 @@
 
 .btn-primary {
   background: var(--gradiente-principal);
-  color: #ffffff;
+  color: var(--cor-texto-sobre-cor);
 }
 
 .btn-secondary {
-  background: var(--cor-primaria);
-  color: var(--cor-branco);
+  background: #5d64d4;
+  color: var(--cor-texto-sobre-cor);
   border: 1px solid var(--cor-borda);
 }
 
 .btn-danger {
-  background: var(--cor-perigo);
-  color: #ffffff;
+  background: #c93636;
+  color: var(--cor-texto-sobre-cor);
 }
 
 .btn-success {
-  background: var(--cor-sucesso);
-  color: #ffffff;
+  background: #0b7f5b;
+  color: var(--cor-texto-sobre-cor);
 }
 
 /* Modal de Confirmação */
@@ -319,7 +316,7 @@
 .config-item-icon {
   width: 40px;
   height: 40px;
-  background: var(--cor-input-bg);
+  background: color-mix(in srgb, var(--cor-primaria) 12%, transparent);
   border-radius: 50%;
   display: flex;
   align-items: center;
@@ -364,7 +361,7 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background-color: #ccc;
+  background-color: var(--cor-borda-campo);
   /* Cor desligado padrão */
   transition: .4s;
   border-radius: 34px;
@@ -372,7 +369,7 @@
 
 /* Cor do slider desligado no modo escuro (mais escuro para não brilhar) */
 [data-theme="dark"] .slider {
-  background-color: #4a5568;
+  background-color: var(--cor-borda-campo);
 }
 
 .slider:before {
@@ -427,4 +424,4 @@ input:checked+.slider:before {
 .notificacao-success { background: #10b981; }
 .notificacao-error   { background: #ef4444; }
 .notificacao-warning { background: #f59e0b; }
-.notificacao-info    { background: #667eea; }
+.notificacao-info    { background: #5d64d4; }
