@@ -728,7 +728,8 @@
 /* Botão de Logout */
 .config-btn-logout {
   width: 100%;
-  background-image: var(--gradiente-principal);
+  /* Ação destrutiva: mesmo vermelho do .btn-danger */
+  background-color: #c93636;
   color: var(--cor-texto-sobre-cor);
   border: none;
   padding: 16px;
@@ -745,7 +746,7 @@
 }
 
 .config-btn-logout:active {
-  background-color: #fecaca;
+  background-color: #a92c2c;
   transform: scale(0.98);
 }
 

@@ -1,6 +1,6 @@
 // IMPORTANTE: bump esta versão a cada deploy para forçar atualização do cache.
 // Os clientes só pegam o SW novo após `skipWaiting` + reload (ver `message` handler abaixo).
-const CACHE_NAME = "rotatrack-v6.7";
+const CACHE_NAME = "rotatrack-v6.8";
 const urlsToCache = [
   "./",
   "./index.html",
